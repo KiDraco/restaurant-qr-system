@@ -1,0 +1,65 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Node.js + Express (backend), React 18 + Tailwind CSS 3 (frontend), SQLite3
+  Architecture: Monorepo — backend/ (MVC) + frontend/ (CRA, component-based)
+  Backend: JavaScript (CommonJS), Express REST API, SQLite3 models, controllers, routes
+  Frontend: JavaScript (JSX), React 18, React Router 6, Tailwind CSS 3, Lucide React icons
+  Domain: Restaurant table management with QR codes — client scan-to-order, admin dashboard
+  Persistence: openspec (file-based SDD)
+
+strict_tdd: false
+
+testing:
+  strict_tdd: false
+  status: partial
+  rationale: >
+    Frontend has Jest via react-scripts test but no custom test config or test files.
+    Backend has NO test runner, no test framework, no test files.
+    Testing infrastructure must be established before strict TDD is viable.
+  backend:
+    runner: none
+    frameworks: []
+    coverage: false
+    linter: none
+    type_checker: none
+    formatter: none
+  frontend:
+    runner: jest
+    runner_command: "cd frontend && npm test"
+    frameworks:
+      - "@testing-library/react (bundled with CRA)"
+      - "@testing-library/jest-dom (bundled with CRA)"
+      - "@testing-library/user-event (bundled with CRA)"
+    coverage: false
+    linter: eslint (react-app config, bundled with CRA)
+    type_checker: none
+    formatter: none
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Scope changes to either backend or frontend where possible
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Separate backend (API) and frontend (UI) concerns
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    guidelines:
+      - Follow existing patterns (MVC backend, component-based frontend)
+      - Backend: CommonJS require/module.exports, Express route handlers
+      - Frontend: JSX, functional components with hooks, Tailwind classes
+    tdd: false
+    test_command: "cd frontend && npm test"
+  verify:
+    test_command: "cd frontend && npm test"
+    build_command: "cd frontend && npm run build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
