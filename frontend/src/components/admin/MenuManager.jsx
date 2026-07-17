@@ -16,10 +16,6 @@ export default function MenuManager() {
     category: ''
   });
 
-  useEffect(() => {
-    loadMenuItems();
-  }, [selectedCategory]);
-
   const loadMenuItems = async () => {
     try {
       const url = selectedCategory === 'all' 
@@ -36,6 +32,11 @@ export default function MenuManager() {
       console.error('Error cargando menú:', error);
     }
   };
+
+  useEffect(() => {
+    loadMenuItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory]);
 
   const handleAdd = async (e) => {
     e.preventDefault();

@@ -9,7 +9,6 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 function App() {
   const [scanned, setScanned] = useState(false);
   const [tableNumber, setTableNumber] = useState(null);
-  const [sessionId, setSessionId] = useState(null);
   const [notification, setNotification] = useState(null);
   const [bill, setBill] = useState(null);
   const [showBill, setShowBill] = useState(false);
@@ -24,13 +23,11 @@ function App() {
 
   const startSession = async (tableNum) => {
     try {
-      const response = await fetch(`${API_URL}/sessions/start`, {
+      await fetch(`${API_URL}/sessions/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tableNumber: parseInt(tableNum) })
       });
-      const data = await response.json();
-      setSessionId(data.sessionId);
     } catch (error) {
       console.error('Error iniciando sesión:', error);
     }
@@ -113,7 +110,6 @@ function App() {
   const handleReset = () => {
     setScanned(false);
     setTableNumber(null);
-    setSessionId(null);
     setNotification(null);
     setBill(null);
     setShowBill(false);

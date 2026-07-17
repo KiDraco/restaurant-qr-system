@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, DollarSign } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 export default function BillDetail({ 
   tableNumber, 

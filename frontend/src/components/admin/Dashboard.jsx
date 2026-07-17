@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Receipt, DollarSign, Users, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Bell, Receipt, DollarSign, Users, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 const API_URL = 'http://localhost:3000/api';
 
