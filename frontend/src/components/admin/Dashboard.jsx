@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Receipt, DollarSign, Users, Clock, CheckCircle, XCircle } from 'lucide-react';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
 export default function AdminDashboard() {
   const [pendingRequests, setPendingRequests] = useState([]);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Clock, DollarSign, Eye, XCircle } from 'lucide-react';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
 export default function TableStatus() {
   const [activeSessions, setActiveSessions] = useState([]);
