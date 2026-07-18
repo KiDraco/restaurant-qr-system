@@ -1,69 +1,41 @@
 const { db } = require('../config/database');
 
 class Table {
-  static create(tableNumber, qrCode) {
-    return new Promise((resolve, reject) => {
-      db.run(
-        'INSERT INTO tables (table_number, qr_code) VALUES (?, ?)',
-        [tableNumber, qrCode],
-        function(err) {
-          if (err) reject(err);
-          else resolve({ id: this.lastID, tableNumber, qrCode });
-        }
-      );
+  static async create(tableNumber, qrCode) {
+    const result = await db.execute({
+      sql: 'INSERT INTO tables (table_number, qr_code) VALUES (?, ?)',
+      args: [tableNumber, qrCode]
     });
+    return { id: result.lastInsertRowid, tableNumber, qrCode };
   }
 
-  static findByQRCode(qrCode) {
-    return new Promise((resolve, reject) => {
-      db.get(
-        'SELECT * FROM tables WHERE qr_code = ?',
-        [qrCode],
-        (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        }
-      );
+  static async findByQRCode(qrCode) {
+    const result = await db.execute({
+      sql: 'SELECT * FROM tables WHERE qr_code = ?',
+      args: [qrCode]
     });
+    return result.rows[0] || null;
   }
 
-  static findByNumber(tableNumber) {
-    return new Promise((resolve, reject) => {
-      db.get(
-        'SELECT * FROM tables WHERE table_number = ?',
-        [tableNumber],
-        (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        }
-      );
+  static async findByNumber(tableNumber) {
+    const result = await db.execute({
+      sql: 'SELECT * FROM tables WHERE table_number = ?',
+      args: [tableNumber]
     });
+    return result.rows[0] || null;
   }
 
-  static getAll() {
-    return new Promise((resolve, reject) => {
-      db.all(
-        'SELECT * FROM tables ORDER BY table_number',
-        [],
-        (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows);
-        }
-      );
-    });
+  static async getAll() {
+    const result = await db.execute('SELECT * FROM tables ORDER BY table_number');
+    return result.rows;
   }
 
-  static updateStatus(tableNumber, status) {
-    return new Promise((resolve, reject) => {
-      db.run(
-        'UPDATE tables SET status = ? WHERE table_number = ?',
-        [status, tableNumber],
-        function(err) {
-          if (err) reject(err);
-          else resolve(this.changes > 0);
-        }
-      );
+  static async updateStatus(tableNumber, status) {
+    const result = await db.execute({
+      sql: 'UPDATE tables SET status = ? WHERE table_number = ?',
+      args: [status, tableNumber]
     });
+    return result.rowsAffected > 0;
   }
 }
 

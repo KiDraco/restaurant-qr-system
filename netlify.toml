@@ -3,9 +3,12 @@
   command = "npm run build"
   publish = "build/"
 
+[functions]
+  directory = "../netlify/functions"
+
 [[redirects]]
   from = "/api/*"
-  to = "http://localhost:3000/api/:splat"
+  to = "/.netlify/functions/api/:splat"
   status = 200
 
 [[redirects]]

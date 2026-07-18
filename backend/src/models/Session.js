@@ -1,77 +1,51 @@
 const { db } = require('../config/database');
 
 class Session {
-  static create(tableNumber) {
-    return new Promise((resolve, reject) => {
-      db.run(
-        'INSERT INTO table_sessions (table_number) VALUES (?)',
-        [tableNumber],
-        function(err) {
-          if (err) reject(err);
-          else resolve({ id: this.lastID, tableNumber });
-        }
-      );
+  static async create(tableNumber) {
+    const result = await db.execute({
+      sql: 'INSERT INTO table_sessions (table_number) VALUES (?)',
+      args: [tableNumber]
     });
+    return { id: result.lastInsertRowid, tableNumber };
   }
 
-  static getActiveByTable(tableNumber) {
-    return new Promise((resolve, reject) => {
-      db.get(
-        `SELECT * FROM table_sessions 
-         WHERE table_number = ? AND status = 'active' 
-         ORDER BY session_start DESC LIMIT 1`,
-        [tableNumber],
-        (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        }
-      );
+  static async getActiveByTable(tableNumber) {
+    const result = await db.execute({
+      sql: `SELECT * FROM table_sessions 
+            WHERE table_number = ? AND status = 'active' 
+            ORDER BY session_start DESC LIMIT 1`,
+      args: [tableNumber]
     });
+    return result.rows[0] || null;
   }
 
-  static close(sessionId) {
-    return new Promise((resolve, reject) => {
-      db.run(
-        `UPDATE table_sessions 
-         SET status = 'closed', session_end = CURRENT_TIMESTAMP 
-         WHERE id = ?`,
-        [sessionId],
-        function(err) {
-          if (err) reject(err);
-          else resolve(this.changes > 0);
-        }
-      );
+  static async close(sessionId) {
+    const result = await db.execute({
+      sql: `UPDATE table_sessions 
+            SET status = 'closed', session_end = CURRENT_TIMESTAMP 
+            WHERE id = ?`,
+      args: [sessionId]
     });
+    return result.rowsAffected > 0;
   }
 
-  static updateTotal(sessionId, amount) {
-    return new Promise((resolve, reject) => {
-      db.run(
-        `UPDATE table_sessions 
-         SET total_amount = total_amount + ? 
-         WHERE id = ?`,
-        [amount, sessionId],
-        function(err) {
-          if (err) reject(err);
-          else resolve(this.changes > 0);
-        }
-      );
+  static async updateTotal(sessionId, amount) {
+    const result = await db.execute({
+      sql: `UPDATE table_sessions 
+            SET total_amount = total_amount + ? 
+            WHERE id = ?`,
+      args: [amount, sessionId]
     });
+    return result.rowsAffected > 0;
   }
 
-  static getAllActive() {
-    return new Promise((resolve, reject) => {
-      db.all(
-        `SELECT * FROM table_sessions 
-         WHERE status = 'active' 
-         ORDER BY session_start DESC`,
-        [],
-        (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows);
-        }
-      );
-    });
+  static async getAllActive() {
+    const result = await db.execute(
+      `SELECT * FROM table_sessions 
+       WHERE status = 'active' 
+       ORDER BY session_start DESC`
+    );
+    return result.rows;
   }
 }
 
