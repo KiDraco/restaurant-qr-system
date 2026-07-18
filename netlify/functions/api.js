@@ -1,20 +1,23 @@
 const serverless = require('serverless-http');
-const app = require('../../backend/src/app');
+const express = require('express');
+const originalApp = require('../../backend/src/app');
 
-exports.handler = serverless(app, {
-  request: function (request, event, context) {
-    // Netlify Functions recibe el path completo del endpoint.
-    // Ej: /.netlify/functions/api/auth/login
-    // Express espera: /api/auth/login
-    const functionPrefix = '/.netlify/functions/api';
-    if (event.path.startsWith(functionPrefix)) {
-      const rest = event.path.slice(functionPrefix.length) || '/';
-      if (rest === '/') {
-        request.url = '/';
-      } else {
-        // Preservar /api para que coincida con las rutas de Express
-        request.url = '/api' + rest;
-      }
-    }
-  },
+const wrapper = express();
+
+// Middleware: ajusta el path de Netlify Functions al formato que Express espera
+// /.netlify/functions/api/auth/login → /api/auth/login
+// /.netlify/functions/api → /
+wrapper.use((req, res, next) => {
+  const match = req.url.match(/^\/\.netlify\/functions\/api(\/.*)?$/);
+  if (match) {
+    const rest = match[1] || '/';
+    req.url = rest === '/' ? '/' : '/api' + rest;
+    // Limpiar caché de URL parseada para que Express use el nuevo path
+    req._parsedUrl = undefined;
+  }
+  next();
 });
+
+wrapper.use(originalApp);
+
+exports.handler = serverless(wrapper);
