@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Clock, DollarSign, Eye, XCircle } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+import api from '../../services/api';
 
 export default function TableStatus() {
   const [activeSessions, setActiveSessions] = useState([]);
@@ -17,8 +16,7 @@ export default function TableStatus() {
 
   const loadActiveSessions = async () => {
     try {
-      const response = await fetch(`${API_URL}/sessions/active`);
-      const data = await response.json();
+      const data = await api.getActiveSessions();
       setActiveSessions(data);
     } catch (error) {
       console.error('Error cargando sesiones:', error);
@@ -29,8 +27,7 @@ export default function TableStatus() {
 
   const loadBillDetails = async (tableNumber) => {
     try {
-      const response = await fetch(`${API_URL}/orders/table/${tableNumber}/bill`);
-      const data = await response.json();
+      const data = await api.getBill(tableNumber);
       setBillDetails(data);
     } catch (error) {
       console.error('Error cargando detalles:', error);
@@ -46,7 +43,7 @@ export default function TableStatus() {
     if (!window.confirm('¿Cerrar esta sesión de mesa?')) return;
     
     try {
-      await fetch(`${API_URL}/sessions/${sessionId}/close`, { method: 'POST' });
+      await api.closeSession(sessionId);
       setSelectedTable(null);
       setBillDetails(null);
       loadActiveSessions();

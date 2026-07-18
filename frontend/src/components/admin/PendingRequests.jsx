@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Receipt, Clock, CheckCircle } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+import api from '../../services/api';
 
 export default function PendingRequests() {
   const [requests, setRequests] = useState([]);
@@ -15,8 +14,7 @@ export default function PendingRequests() {
 
   const loadRequests = async () => {
     try {
-      const response = await fetch(`${API_URL}/requests/pending`);
-      const data = await response.json();
+      const data = await api.getPendingRequests();
       setRequests(data);
     } catch (error) {
       console.error('Error cargando solicitudes:', error);
@@ -27,7 +25,7 @@ export default function PendingRequests() {
 
   const handleAttend = async (id) => {
     try {
-      await fetch(`${API_URL}/requests/${id}/attend`, { method: 'PATCH' });
+      await api.attendRequest(id);
       loadRequests();
     } catch (error) {
       console.error('Error atendiendo solicitud:', error);

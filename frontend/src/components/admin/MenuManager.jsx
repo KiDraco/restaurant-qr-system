@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+import api from '../../services/api';
 
 export default function MenuManager() {
   const [menuItems, setMenuItems] = useState([]);
@@ -18,14 +17,10 @@ export default function MenuManager() {
 
   const loadMenuItems = async () => {
     try {
-      const url = selectedCategory === 'all' 
-        ? `${API_URL}/menu`
-        : `${API_URL}/menu?category=${selectedCategory}`;
-      const response = await fetch(url);
-      const data = await response.json();
+      const data = await api.getAllMenuItems(
+        selectedCategory === 'all' ? null : selectedCategory
+      );
       setMenuItems(data);
-
-      // Extraer categorías únicas
       const uniqueCategories = [...new Set(data.map(item => item.category))];
       setCategories(uniqueCategories);
     } catch (error) {
@@ -41,14 +36,12 @@ export default function MenuManager() {
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
-      await fetch(`${API_URL}/menu`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price)
-        })
-      });
+      await api.createMenuItem(
+        formData.name,
+        formData.description,
+        parseFloat(formData.price),
+        formData.category
+      );
       setShowAddForm(false);
       setFormData({ name: '', description: '', price: '', category: '' });
       loadMenuItems();
@@ -60,11 +53,7 @@ export default function MenuManager() {
   const handleUpdate = async (id) => {
     try {
       const item = menuItems.find(i => i.id === id);
-      await fetch(`${API_URL}/menu/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item)
-      });
+      await api.updateMenuItem(id, item);
       setEditing(null);
       loadMenuItems();
     } catch (error) {
@@ -76,7 +65,7 @@ export default function MenuManager() {
     if (!window.confirm('¿Estás seguro de eliminar este producto?')) return;
     
     try {
-      await fetch(`${API_URL}/menu/${id}`, { method: 'DELETE' });
+      await api.deleteMenuItem(id);
       loadMenuItems();
     } catch (error) {
       console.error('Error eliminando producto:', error);

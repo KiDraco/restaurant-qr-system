@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, DollarSign, ShoppingCart, Users, Bell, Receipt } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+import api from '../../services/api';
 
 export default function Statistics() {
   const [stats, setStats] = useState({
@@ -19,8 +18,8 @@ export default function Statistics() {
   const loadStats = async () => {
     try {
       const [requestStats, salesStats] = await Promise.all([
-        fetch(`${API_URL}/requests/stats`).then(r => r.json()),
-        fetch(`${API_URL}/orders/stats`).then(r => r.json())
+        api.getRequestStats(),
+        api.getSalesStats()
       ]);
 
       setStats({
