@@ -1,3 +1,8 @@
+// @libsql/client devuelve BigInt para IDs; JSON no lo serializa por defecto
+BigInt.prototype.toJSON = function () {
+  return Number(this);
+};
+
 const express = require('express');
 const cors = require('cors');
 const errorHandler = require('./middleware/errorHandler');
