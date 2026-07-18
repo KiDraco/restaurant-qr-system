@@ -1,8 +1,31 @@
 const serverless = require('serverless-http');
 const express = require('express');
 const originalApp = require('../../backend/src/app');
+const { initializeDatabase } = require('../../backend/src/config/database');
 
 const wrapper = express();
+
+let dbInitialized = false;
+const initPromise = initializeDatabase()
+  .then(() => {
+    dbInitialized = true;
+    console.log('✅ Base de datos inicializada');
+  })
+  .catch((err) => {
+    console.error('❌ Error inicializando base de datos:', err);
+  });
+
+// Middleware: espera a que la DB esté lista
+wrapper.use((req, res, next) => {
+  if (!dbInitialized) {
+    return initPromise
+      .then(() => next())
+      .catch((err) =>
+        res.status(500).json({ error: 'Error de inicialización', message: err.message })
+      );
+  }
+  next();
+});
 
 // Middleware: ajusta el path de Netlify Functions al formato que Express espera
 wrapper.use((req, res, next) => {
