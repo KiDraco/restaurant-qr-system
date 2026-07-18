@@ -5,7 +5,7 @@ class User {
   static async findByEmail(email) {
     const result = await db.execute({
       sql: 'SELECT * FROM users WHERE email = ?',
-      args: [email]
+      args: [email],
     });
     return result.rows[0] || null;
   }
@@ -13,7 +13,7 @@ class User {
   static async findById(id) {
     const result = await db.execute({
       sql: 'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
-      args: [id]
+      args: [id],
     });
     return result.rows[0] || null;
   }
@@ -22,7 +22,7 @@ class User {
     const password_hash = bcrypt.hashSync(password, 10);
     const result = await db.execute({
       sql: 'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
-      args: [name, email, password_hash, role]
+      args: [name, email, password_hash, role],
     });
     return { id: result.lastInsertRowid, name, email, role };
   }

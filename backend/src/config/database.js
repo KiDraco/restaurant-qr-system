@@ -1,9 +1,33 @@
 const { createClient } = require('@libsql/client');
 
-const db = createClient({
+const client = createClient({
   url: process.env.TURSO_DB_URL || 'file:./restaurant.db',
   authToken: process.env.TURSO_DB_TOKEN,
 });
+
+// Envolver execute para convertir BigInt → Number automáticamente
+const originalExecute = client.execute.bind(client);
+client.execute = async function (config) {
+  const result = await originalExecute(config);
+  if (result.rows) {
+    result.rows = result.rows.map((row) => {
+      const converted = {};
+      for (const [key, value] of Object.entries(row)) {
+        converted[key] = typeof value === 'bigint' ? Number(value) : value;
+      }
+      return converted;
+    });
+  }
+  if (typeof result.lastInsertRowid === 'bigint') {
+    result.lastInsertRowid = Number(result.lastInsertRowid);
+  }
+  if (typeof result.rowsAffected === 'bigint') {
+    result.rowsAffected = Number(result.rowsAffected);
+  }
+  return result;
+};
+
+const db = client;
 
 async function initializeDatabase() {
   try {
