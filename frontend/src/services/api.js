@@ -190,6 +190,13 @@ class API {
   }
 
   // Stats (admin-only)
+  async getActiveSessions() {
+    const response = await fetch(`${API_URL}/sessions/active`, {
+      headers: this.getAuthHeaders()
+    });
+    return response.json();
+  }
+
   async getRequestStats() {
     const response = await fetch(`${API_URL}/requests/stats`, {
       headers: this.getAuthHeaders()

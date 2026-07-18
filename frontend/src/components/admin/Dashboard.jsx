@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Receipt, DollarSign, Users, Clock, CheckCircle, XCircle } from 'lucide-react';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+import api from '../../services/api';
 
 export default function AdminDashboard() {
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -21,10 +20,10 @@ export default function AdminDashboard() {
   const loadData = async () => {
     try {
       const [requests, sessions, requestStats, salesStats] = await Promise.all([
-        fetch(`${API_URL}/requests/pending`).then(r => r.json()),
-        fetch(`${API_URL}/sessions/active`).then(r => r.json()),
-        fetch(`${API_URL}/requests/stats`).then(r => r.json()),
-        fetch(`${API_URL}/orders/stats`).then(r => r.json())
+        api.getPendingRequests(),
+        api.getActiveSessions(),
+        api.getRequestStats(),
+        api.getSalesStats()
       ]);
 
       setPendingRequests(requests);
@@ -39,7 +38,7 @@ export default function AdminDashboard() {
 
   const handleAttendRequest = async (id) => {
     try {
-      await fetch(`${API_URL}/requests/${id}/attend`, { method: 'PATCH' });
+      await api.attendRequest(id);
       loadData();
     } catch (error) {
       console.error('Error atendiendo solicitud:', error);
