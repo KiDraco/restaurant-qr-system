@@ -1,3 +1,10 @@
+// @libsql/client devuelve BigInt; JSON no lo serializa sin esto
+if (!BigInt.prototype.toJSON) {
+  BigInt.prototype.toJSON = function () {
+    return Number(this);
+  };
+}
+
 const serverless = require('serverless-http');
 const express = require('express');
 const originalApp = require('../../backend/src/app');
