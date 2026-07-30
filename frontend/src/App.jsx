@@ -178,6 +178,7 @@ function App() {
         {notification && <Notification type={notification.type} message={notification.message} />}
         <ClientMenu
           tableNumber={tableNumber}
+          bill={bill}
           onOrder={createOrder}
           onBack={() => setShowMenu(false)}
           formatPrice={formatPrice}
