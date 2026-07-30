@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Receipt, ShoppingCart, DollarSign } from 'lucide-react';
+import { Bell, Receipt, ShoppingCart, DollarSign, UtensilsCrossed } from 'lucide-react';
 
 export default function TableView({ 
   tableNumber, 
@@ -7,6 +7,7 @@ export default function TableView({
   onCallWaiter, 
   onRequestBill, 
   onViewBill,
+  onViewMenu,
   onReset,
   formatPrice 
 }) {
@@ -62,6 +63,26 @@ export default function TableView({
                 </h3>
                 <p className="text-sm text-gray-600">
                   Solicita atención en tu mesa
+                </p>
+              </div>
+            </div>
+          </button>
+
+          {/* Ver Menú */}
+          <button
+            onClick={onViewMenu}
+            className="w-full bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center">
+                <UtensilsCrossed className="w-7 h-7 text-orange-600" />
+              </div>
+              <div className="text-left flex-1">
+                <h3 className="text-xl font-bold text-gray-800 mb-1">
+                  Ver Menú
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Elegí lo que querés comer
                 </p>
               </div>
             </div>

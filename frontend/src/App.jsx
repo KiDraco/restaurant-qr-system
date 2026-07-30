@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ScanScreen from './components/client/ScanScreen';
 import TableView from './components/client/TableView';
 import BillDetail from './components/client/BillDetail';
+import ClientMenu from './components/client/ClientMenu';
 import Notification from './components/client/Notification';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
@@ -12,6 +13,7 @@ function App() {
   const [notification, setNotification] = useState(null);
   const [bill, setBill] = useState(null);
   const [showBill, setShowBill] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -113,6 +115,32 @@ function App() {
     setNotification(null);
     setBill(null);
     setShowBill(false);
+    setShowMenu(false);
+  };
+
+  const createOrder = async (menuItemId) => {
+    try {
+      const response = await fetch(`${API_URL}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          tableNumber: parseInt(tableNumber), 
+          menuItemId, 
+          quantity: 1 
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        await fetchBill(tableNumber);
+        return { success: true, ...data };
+      } else {
+        const err = await response.json();
+        return { success: false, error: err.error };
+      }
+    } catch (error) {
+      console.error('Error creando orden:', error);
+      return { success: false, error: 'Error de conexión' };
+    }
   };
 
   const showNotification = (type, message) => {
@@ -144,6 +172,20 @@ function App() {
     );
   }
 
+  if (showMenu) {
+    return (
+      <div>
+        {notification && <Notification type={notification.type} message={notification.message} />}
+        <ClientMenu
+          tableNumber={tableNumber}
+          onOrder={createOrder}
+          onBack={() => setShowMenu(false)}
+          formatPrice={formatPrice}
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       {notification && <Notification type={notification.type} message={notification.message} />}
@@ -153,6 +195,7 @@ function App() {
         onCallWaiter={handleCallWaiter}
         onRequestBill={handleRequestBill}
         onViewBill={handleViewBill}
+        onViewMenu={() => setShowMenu(true)}
         onReset={handleReset}
         formatPrice={formatPrice}
       />

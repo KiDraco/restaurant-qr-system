@@ -74,6 +74,17 @@ async function initializeDatabase() {
         role TEXT NOT NULL DEFAULT 'staff',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
+      `CREATE TABLE IF NOT EXISTS promotions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        discount_percentage INTEGER NOT NULL DEFAULT 0,
+        image_url TEXT,
+        start_date TEXT,
+        end_date TEXT,
+        active BOOLEAN DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`,
       `CREATE TABLE IF NOT EXISTS orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         session_id INTEGER NOT NULL,
@@ -91,6 +102,13 @@ async function initializeDatabase() {
 
     for (const sql of tables) {
       await db.execute(sql);
+    }
+
+    // Migrations
+    try {
+      await db.execute('ALTER TABLE menu_items ADD COLUMN image_url TEXT DEFAULT NULL');
+    } catch (e) {
+      // Column may already exist
     }
 
     console.log('✅ Tablas inicializadas correctamente');

@@ -14,6 +14,7 @@ const requestRoutes = require('./routes/requestRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const promotionRoutes = require('./routes/promotionRoutes');
 
 // Importar middleware de autenticaci\u00f3n
 const { verifyToken } = require('./middleware/auth');
@@ -52,6 +53,7 @@ app.get('/', (req, res) => {
       sessions: '/api/sessions',
       menu: '/api/menu',
       orders: '/api/orders',
+      promotions: '/api/promotions',
       bill: '/api/bill'
     }
   });
@@ -66,6 +68,7 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 // Middleware de manejo de errores
 app.use(errorHandler);

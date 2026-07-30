@@ -140,11 +140,11 @@ class API {
   }
 
   // Menu (GET is public for client menu; POST/PUT/DELETE are admin)
-  async createMenuItem(name, description, price, category) {
+  async createMenuItem(name, description, price, category, image_url) {
     const response = await fetch(`${API_URL}/menu`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify({ name, description, price, category })
+      body: JSON.stringify({ name, description, price, category, image_url })
     });
     return response.json();
   }
@@ -238,6 +238,45 @@ class API {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ mapping, rows })
+    });
+    return response.json();
+  }
+
+  // Promotions (admin CRUD)
+  async getActivePromotions() {
+    const response = await fetch(`${API_URL}/promotions/active`);
+    return response.json();
+  }
+
+  async getAllPromotions() {
+    const response = await fetch(`${API_URL}/promotions`, {
+      headers: this.getAuthHeaders()
+    });
+    return response.json();
+  }
+
+  async createPromotion(name, description, discount_percentage, image_url, start_date, end_date) {
+    const response = await fetch(`${API_URL}/promotions`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ name, description, discount_percentage, image_url, start_date, end_date })
+    });
+    return response.json();
+  }
+
+  async updatePromotion(id, data) {
+    const response = await fetch(`${API_URL}/promotions/${id}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  }
+
+  async deletePromotion(id) {
+    const response = await fetch(`${API_URL}/promotions/${id}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders()
     });
     return response.json();
   }

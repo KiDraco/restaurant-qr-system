@@ -4,13 +4,13 @@ const ExcelParser = require('../services/excelParser');
 class MenuController {
   async createMenuItem(req, res, next) {
     try {
-      const { name, description, price, category } = req.body;
+      const { name, description, price, category, image_url } = req.body;
 
       if (!name || !price || !category) {
         return res.status(400).json({ error: 'Datos incompletos' });
       }
 
-      const menuItem = await MenuItem.create(name, description, price, category);
+      const menuItem = await MenuItem.create(name, description, price, category, image_url);
 
       res.json({
         message: 'Producto agregado',
@@ -121,7 +121,7 @@ class MenuController {
         }
 
         try {
-          await MenuItem.create(itemName, itemDescription, itemPrice, itemCategory);
+          await MenuItem.create(itemName, itemDescription, itemPrice, itemCategory, null);
           imported++;
         } catch (err) {
           errors.push({ row: i + 1, name: itemName, error: err.message });

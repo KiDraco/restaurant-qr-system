@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X, Upload } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Upload, Image } from 'lucide-react';
 import api from '../../services/api';
 import MenuImportWizard from './MenuImportWizard';
 
@@ -14,7 +14,8 @@ export default function MenuManager() {
     name: '',
     description: '',
     price: '',
-    category: ''
+    category: '',
+    image_url: ''
   });
 
   const loadMenuItems = async () => {
@@ -42,10 +43,11 @@ export default function MenuManager() {
         formData.name,
         formData.description,
         parseFloat(formData.price),
-        formData.category
+        formData.category,
+        formData.image_url
       );
       setShowAddForm(false);
-      setFormData({ name: '', description: '', price: '', category: '' });
+      setFormData({ name: '', description: '', price: '', category: '', image_url: '' });
       loadMenuItems();
     } catch (error) {
       console.error('Error agregando producto:', error);
@@ -161,6 +163,25 @@ export default function MenuManager() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  URL de imagen (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="https://images.unsplash.com/photo-..."
+                />
+                {formData.image_url && (
+                  <img
+                    src={formData.image_url}
+                    alt="Vista previa"
+                    className="w-16 h-16 object-cover rounded mt-2"
+                  />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Precio
                 </label>
                 <input
@@ -212,6 +233,9 @@ export default function MenuManager() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Imagen
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Producto
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -228,6 +252,43 @@ export default function MenuManager() {
             <tbody className="divide-y divide-gray-200">
               {menuItems.map(item => (
                 <tr key={item.id}>
+                  <td className="px-6 py-4">
+                    {editing === item.id ? (
+                      <div>
+                        <input
+                          type="text"
+                          value={item.image_url || ''}
+                          onChange={(e) => {
+                            const updated = menuItems.map(i =>
+                              i.id === item.id ? { ...i, image_url: e.target.value } : i
+                            );
+                            setMenuItems(updated);
+                          }}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                          placeholder="URL de imagen"
+                        />
+                        {item.image_url && (
+                          <img
+                            src={item.image_url}
+                            alt=""
+                            className="w-12 h-12 object-cover rounded mt-1"
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                          <Image className="w-5 h-5 text-gray-400" />
+                        </div>
+                      )
+                    )}
+                  </td>
                   <td className="px-6 py-4">
                     {editing === item.id ? (
                       <div>
