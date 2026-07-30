@@ -451,8 +451,7 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
                     className="snap-start shrink-0 w-[85vw] max-w-sm bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm"
                     role="group"
                     aria-roledescription="slide"
-                    aria-label={`${item.name}, ${formatPrice(item.price)}`}
-                    aria-label={`${item.name}, ${item.description || ''}, ${formatPrice(item.price)}`}
+                    aria-label={`${item.name}${item.description ? `, ${item.description}` : ''}, ${formatPrice(item.price)}`}
                   >
                     <div className="relative">
                       {item.image_url ? (
