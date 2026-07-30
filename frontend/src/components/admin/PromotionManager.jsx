@@ -33,6 +33,7 @@ export default function PromotionManager() {
 
   useEffect(() => {
     loadPromotions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showNotification = (type, message) => {
