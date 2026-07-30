@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Upload } from 'lucide-react';
 import api from '../../services/api';
+import MenuImportWizard from './MenuImportWizard';
 
 export default function MenuManager() {
   const [menuItems, setMenuItems] = useState([]);
@@ -8,6 +9,7 @@ export default function MenuManager() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [editing, setEditing] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -83,13 +85,22 @@ export default function MenuManager() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Gestión de Menú</h2>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
-        >
-          <Plus className="w-5 h-5" />
-          Agregar Producto
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowImport(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Upload className="w-5 h-5" />
+            Importar Excel
+          </button>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+          >
+            <Plus className="w-5 h-5" />
+            Agregar Producto
+          </button>
+        </div>
       </div>
 
       {/* Filtro por categoría */}
@@ -317,6 +328,12 @@ export default function MenuManager() {
           </table>
         </div>
       </div>
+      {showImport && (
+        <MenuImportWizard
+          onClose={() => setShowImport(false)}
+          onImported={loadMenuItems}
+        />
+      )}
     </div>
   );
 }

@@ -210,6 +210,37 @@ class API {
     });
     return response.json();
   }
+
+  // Menu import from Excel
+  async importMenuParse(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target.result.split(',')[1];
+        try {
+          const response = await fetch(`${API_URL}/menu/import/parse`, {
+            method: 'POST',
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify({ fileBase64: base64 })
+          });
+          resolve(response.json());
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async importMenuConfirm(mapping, rows) {
+    const response = await fetch(`${API_URL}/menu/import/confirm`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ mapping, rows })
+    });
+    return response.json();
+  }
 }
 
 // eslint-disable-next-line import/no-anonymous-default-export

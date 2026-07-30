@@ -14,4 +14,8 @@ router.post('/', verifyToken, requireRole('admin'), menuController.createMenuIte
 router.put('/:id', verifyToken, requireRole('admin'), menuController.updateMenuItem);
 router.delete('/:id', verifyToken, requireRole('admin'), menuController.deleteMenuItem);
 
+// Importar menú desde Excel (admin-only)
+router.post('/import/parse', verifyToken, requireRole('admin'), menuController.importParse);
+router.post('/import/confirm', verifyToken, requireRole('admin'), menuController.importConfirm);
+
 module.exports = router;
