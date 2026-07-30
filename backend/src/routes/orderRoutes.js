@@ -3,9 +3,11 @@ const router = express.Router();
 const orderController = require('../controllers/orderController');
 const sessionController = require('../controllers/sessionController');
 const { verifyToken } = require('../middleware/auth');
+const { validate } = require('../middleware/validate');
+const { orderSchema } = require('../validators/schemas');
 
 // POST /api/orders - Crear orden (público - clientes)
-router.post('/', orderController.createOrder);
+router.post('/', validate(orderSchema), orderController.createOrder);
 
 // GET /api/orders/table/:tableNumber - Obtener órdenes (público - clientes)
 router.get('/table/:tableNumber', orderController.getOrdersByTable);

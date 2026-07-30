@@ -25,8 +25,7 @@ export default function Login() {
     try {
       const data = await api.login(email, password);
 
-      if (data.token) {
-        api.setToken(data.token);
+      if (data.token || data.user) {
         navigate('/admin');
       } else {
         setError(data.error || 'Error al iniciar sesión');

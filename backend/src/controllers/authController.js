@@ -30,6 +30,14 @@ class AuthController {
         { expiresIn: JWT_EXPIRY }
       );
 
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000,
+        path: '/'
+      });
+
       res.json({
         token,
         user: {
@@ -104,6 +112,16 @@ class AuthController {
     } catch (error) {
       next(error);
     }
+  }
+
+  async logout(req, res) {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
+    });
+    res.json({ message: 'Sesión cerrada exitosamente' });
   }
 }
 

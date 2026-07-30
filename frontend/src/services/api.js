@@ -1,33 +1,16 @@
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
 class API {
-  // Auth helpers
-  getToken() {
-    return localStorage.getItem('token');
-  }
-
   getAuthHeaders() {
-    const token = this.getToken();
-    return token ? {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    } : { 'Content-Type': 'application/json' };
+    return { 'Content-Type': 'application/json' };
   }
 
-  setToken(token) {
-    localStorage.setItem('token', token);
-  }
-
-  clearToken() {
-    localStorage.removeItem('token');
-  }
-
-  isAuthenticated() {
-    const token = this.getToken();
-    if (!token) return false;
+  async isAuthenticated() {
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 > Date.now();
+      const response = await fetch(`${API_URL}/auth/me`, {
+        credentials: 'include'
+      });
+      return response.ok;
     } catch {
       return false;
     }
@@ -38,7 +21,8 @@ class API {
     const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -50,14 +34,16 @@ class API {
         'Content-Type': 'application/json',
         'x-admin-secret': adminSecret
       },
-      body: JSON.stringify({ name, email, password, role })
+      body: JSON.stringify({ name, email, password, role }),
+      credentials: 'include'
     });
     return response.json();
   }
 
   async getMe() {
     const response = await fetch(`${API_URL}/auth/me`, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -67,21 +53,24 @@ class API {
     const response = await fetch(`${API_URL}/tables/generate`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify({ numberOfTables })
+      body: JSON.stringify({ numberOfTables }),
+      credentials: 'include'
     });
     return response.json();
   }
 
   async getAllTables() {
     const response = await fetch(`${API_URL}/tables`, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
 
   async getTableByQR(qrCode) {
     const response = await fetch(`${API_URL}/tables/${qrCode}`, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -91,14 +80,16 @@ class API {
     const response = await fetch(`${API_URL}/requests`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tableNumber, requestType })
+      body: JSON.stringify({ tableNumber, requestType }),
+      credentials: 'include'
     });
     return response.json();
   }
 
   async getPendingRequests() {
     const response = await fetch(`${API_URL}/requests/pending`, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -106,7 +97,8 @@ class API {
   async attendRequest(id) {
     const response = await fetch(`${API_URL}/requests/${id}/attend`, {
       method: 'PATCH',
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -116,25 +108,31 @@ class API {
     const response = await fetch(`${API_URL}/sessions/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tableNumber })
+      body: JSON.stringify({ tableNumber }),
+      credentials: 'include'
     });
     return response.json();
   }
 
   async getActiveSession(tableNumber) {
-    const response = await fetch(`${API_URL}/sessions/table/${tableNumber}`);
+    const response = await fetch(`${API_URL}/sessions/table/${tableNumber}`, {
+      credentials: 'include'
+    });
     return response.json();
   }
 
   async getBill(tableNumber) {
-    const response = await fetch(`${API_URL}/orders/table/${tableNumber}/bill`);
+    const response = await fetch(`${API_URL}/orders/table/${tableNumber}/bill`, {
+      credentials: 'include'
+    });
     return response.json();
   }
 
   async closeSession(sessionId) {
     const response = await fetch(`${API_URL}/sessions/${sessionId}/close`, {
       method: 'POST',
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -144,7 +142,8 @@ class API {
     const response = await fetch(`${API_URL}/menu`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify({ name, description, price, category, image_url })
+      body: JSON.stringify({ name, description, price, category, image_url }),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -153,7 +152,9 @@ class API {
     const url = category 
       ? `${API_URL}/menu?category=${category}`
       : `${API_URL}/menu`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      credentials: 'include'
+    });
     return response.json();
   }
 
@@ -161,7 +162,8 @@ class API {
     const response = await fetch(`${API_URL}/menu/${id}`, {
       method: 'PUT',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -169,7 +171,8 @@ class API {
   async deleteMenuItem(id) {
     const response = await fetch(`${API_URL}/menu/${id}`, {
       method: 'DELETE',
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -179,34 +182,40 @@ class API {
     const response = await fetch(`${API_URL}/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tableNumber, menuItemId, quantity })
+      body: JSON.stringify({ tableNumber, menuItemId, quantity }),
+      credentials: 'include'
     });
     return response.json();
   }
 
   async getOrdersByTable(tableNumber) {
-    const response = await fetch(`${API_URL}/orders/table/${tableNumber}`);
+    const response = await fetch(`${API_URL}/orders/table/${tableNumber}`, {
+      credentials: 'include'
+    });
     return response.json();
   }
 
   // Stats (admin-only)
   async getActiveSessions() {
     const response = await fetch(`${API_URL}/sessions/active`, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
 
   async getRequestStats() {
     const response = await fetch(`${API_URL}/requests/stats`, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
 
   async getSalesStats() {
     const response = await fetch(`${API_URL}/orders/stats`, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -221,7 +230,8 @@ class API {
           const response = await fetch(`${API_URL}/menu/import/parse`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
-            body: JSON.stringify({ fileBase64: base64 })
+            body: JSON.stringify({ fileBase64: base64 }),
+            credentials: 'include'
           });
           resolve(response.json());
         } catch (err) {
@@ -237,20 +247,24 @@ class API {
     const response = await fetch(`${API_URL}/menu/import/confirm`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify({ mapping, rows })
+      body: JSON.stringify({ mapping, rows }),
+      credentials: 'include'
     });
     return response.json();
   }
 
   // Promotions (admin CRUD)
   async getActivePromotions() {
-    const response = await fetch(`${API_URL}/promotions/active`);
+    const response = await fetch(`${API_URL}/promotions/active`, {
+      credentials: 'include'
+    });
     return response.json();
   }
 
   async getAllPromotions() {
     const response = await fetch(`${API_URL}/promotions`, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -259,7 +273,8 @@ class API {
     const response = await fetch(`${API_URL}/promotions`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify({ name, description, discount_percentage, image_url, start_date, end_date })
+      body: JSON.stringify({ name, description, discount_percentage, image_url, start_date, end_date }),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -268,7 +283,8 @@ class API {
     const response = await fetch(`${API_URL}/promotions/${id}`, {
       method: 'PUT',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
+      credentials: 'include'
     });
     return response.json();
   }
@@ -276,7 +292,8 @@ class API {
   async deletePromotion(id) {
     const response = await fetch(`${API_URL}/promotions/${id}`, {
       method: 'DELETE',
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
     });
     return response.json();
   }

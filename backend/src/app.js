@@ -5,6 +5,9 @@ BigInt.prototype.toJSON = function () {
 
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const errorHandler = require('./middleware/errorHandler');
 
 // Importar rutas
@@ -35,6 +38,31 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Security headers
+app.use(helmet());
+
+// Cookie parser for httpOnly tokens
+app.use(cookieParser());
+
+// General rate limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas solicitudes, intente de nuevo más tarde' }
+});
+app.use(generalLimiter);
+
+// Auth-specific rate limiter (stricter)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos de inicio de sesión, intente de nuevo más tarde' }
+});
+
 // Logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -60,7 +88,7 @@ app.get('/', (req, res) => {
 });
 
 // Rutas de autenticaci\u00f3n (p\u00fablicas para login/register)
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 
 // Rutas admin protegidas con JWT
 app.use('/api/tables', verifyToken, tableRoutes);
