@@ -300,6 +300,7 @@ function parseMenuText(text) {
   let sawHeader = false; // any category/subgroup header seen yet
   let headerlessRows = []; // inline rows emitted before the first header
   let sectionFlatPrice = false; // single-price-for-all signal seen in section
+  let currentSectionY = null; // Y coordinate of current section header for price attribution
   let wineSubgroup = null;
   let names = []; // [{ name, description }]
   let prices = []; // [int]
