@@ -74,6 +74,17 @@ const NOISE_PATTERNS = [
   /^\d{1,2}$/, // page numbers
 ];
 
+// A line stating one price for the whole section ("TODOS LOS PLATOS
+// $17500" over the KIDS items): never an item, its price fans out to
+// every name in the section (see flushSection). Compared spaceless so
+// letter-spaced variants match too.
+const FLAT_PRICE_SIGNAL = /TODOSLOSPLATOS|PRECIOUNICO|TODOALMISMOPRECIO/;
+
+// Surcharge lines ("SERVICIO DE MESA"): a detached price on the very next
+// line belongs to the surcharge, not to any item, so it is dropped together
+// with the line instead of becoming an orphan price.
+const SURCHARGE_NOISE = /SERVICIODEMESA|CUBIERTO|PROPINA|RECARGO/;
+
 function normalize(line) {
   return line
     .normalize('NFD')
@@ -119,6 +130,10 @@ function parseStandalonePrice(line) {
     const value = parseInt(withSign[1], 10);
     return value > 0 ? value : null;
   }
+  // Bare numbers: reject anything carrying letters or unit/edition marks
+  // ("600gr", "1.75L", "700cc", "12 AÑOS", "N°1") so only pure 4-6 digit
+  // amounts qualify as detached prices.
+  if (/[\p{L}°º]/u.test(line)) return null;
   if (/^\d{4,6}$/.test(compact)) {
     const value = parseInt(compact, 10);
     return value > 0 ? value : null;
@@ -163,11 +178,17 @@ function parseMenuText(text) {
 
   const rows = [];
   const warnings = [];
+  const details = [];
   let skippedNoPrice = 0;
   let skippedExtraPrice = 0;
   let uncategorized = 0;
+  const noPriceNames = [];
+  const orphanEntries = []; // [{ prices, category }]
 
   let currentCategory = null;
+  let sawHeader = false; // any category/subgroup header seen yet
+  let headerlessRows = []; // inline rows emitted before the first header
+  let sectionFlatPrice = false; // single-price-for-all signal seen in section
   let wineSubgroup = null;
   let names = []; // [{ name, description }]
   let prices = []; // [int]
@@ -178,26 +199,54 @@ function parseMenuText(text) {
     return description ? `${prefix} ${description}` : prefix;
   }
 
+  // First header below leading content adopts it: headerless inline rows
+  // are re-categorized and detached buffers are kept (not flushed) so they
+  // pair under the new category instead of "General".
+  function adoptFirstHeader(label) {
+    for (const row of headerlessRows) row.category = label;
+    uncategorized -= headerlessRows.length;
+    headerlessRows = [];
+    currentCategory = label;
+    sawHeader = true;
+    wineSubgroup = null;
+  }
+
   function flushSection() {
-    const count = Math.min(names.length, prices.length);
+    const cat = currentCategory || 'General';
+    // Single-price-for-all section (KIDS "TODOS LOS PLATOS $17500"):
+    // exactly 1 price fans out to every name instead of zipping 1:1.
+    const flatAll =
+      (cat === 'Menú Kids' || sectionFlatPrice) && prices.length === 1 && names.length > 1;
+    const count = flatAll ? names.length : Math.min(names.length, prices.length);
     for (let i = 0; i < count; i++) {
       const entry = names[i];
-      if (!entry.name || prices[i] <= 0) {
+      const price = flatAll ? prices[0] : prices[i];
+      if (!entry.name || !(price > 0)) {
         skippedNoPrice++;
+        noPriceNames.push(entry.name || '(empty)');
         continue;
       }
       rows.push({
         name: entry.name,
         description: withSubgroup(entry.description),
-        price: prices[i],
-        category: currentCategory || 'General',
+        price,
+        category: cat,
       });
       if (!currentCategory) uncategorized++;
     }
-    if (names.length > prices.length) skippedNoPrice += names.length - prices.length;
-    if (prices.length > names.length) skippedExtraPrice += prices.length - names.length;
+    if (!flatAll) {
+      if (names.length > prices.length) {
+        skippedNoPrice += names.length - prices.length;
+        for (let i = prices.length; i < names.length; i++) noPriceNames.push(names[i].name);
+      }
+      if (prices.length > names.length) {
+        skippedExtraPrice += prices.length - names.length;
+        orphanEntries.push({ prices: prices.slice(names.length), category: cat });
+      }
+    }
     names = [];
     prices = [];
+    sectionFlatPrice = false;
   }
 
   function nextIsPrice(idx) {
@@ -209,22 +258,63 @@ function parseMenuText(text) {
   for (let idx = 0; idx < lines.length; idx++) {
     const line = lines[idx];
     const norm = normalize(line);
+    const spaceless = norm.replace(/\s+/g, '');
+
+    // Single-price-for-all signal line: never an item. Its price (when
+    // present) joins the section pool and fans out at flush time.
+    if (FLAT_PRICE_SIGNAL.test(spaceless)) {
+      const found = CATEGORIES.find((c) => spaceless.includes(c.key.replace(/\s+/g, '')));
+      if (found && found.label !== currentCategory) {
+        if (sawHeader) {
+          flushSection();
+          currentCategory = found.label;
+          wineSubgroup = null;
+        } else {
+          adoptFirstHeader(found.label);
+        }
+      }
+      const pm = /\$\s*([\d.,]{3,8})/.exec(line);
+      if (pm) {
+        const value = parseInt(pm[1].replace(/[.,]/g, ''), 10);
+        if (Number.isFinite(value) && value > 0 && String(value).length >= 3 && String(value).length <= 6) {
+          prices.push(value);
+        }
+      }
+      sectionFlatPrice = true;
+      continue;
+    }
 
     const label = categoryLabelFor(norm);
     if (label) {
-      flushSection();
-      currentCategory = label;
-      wineSubgroup = null;
+      if (sawHeader) {
+        flushSection();
+        currentCategory = label;
+        wineSubgroup = null;
+      } else {
+        adoptFirstHeader(label);
+      }
       continue;
     }
     const subgroup = wineSubgroupFor(norm);
     if (subgroup) {
-      flushSection();
-      currentCategory = 'Vinos';
+      if (sawHeader) {
+        flushSection();
+        currentCategory = 'Vinos';
+      } else {
+        adoptFirstHeader('Vinos');
+      }
       wineSubgroup = subgroup;
       continue;
     }
-    if (isNoise(norm)) continue;
+    if (isNoise(norm)) {
+      // A detached price glued to a surcharge line is the surcharge's own
+      // amount: drop it with the line so it never becomes an orphan.
+      if (SURCHARGE_NOISE.test(spaceless)) {
+        const nxt = lines[idx + 1];
+        if (nxt !== undefined && parseStandalonePrice(nxt) !== null) idx++;
+      }
+      continue;
+    }
 
     const standalone = parseStandalonePrice(line);
     if (standalone !== null) {
@@ -238,20 +328,29 @@ function parseMenuText(text) {
       // price can never be stolen by (or steal from) detached names.
       const name = cleanName(inline.name);
       if (name) {
-        rows.push({
+        const row = {
           name,
           description: withSubgroup(''),
           price: inline.price,
           category: currentCategory || 'General',
-        });
-        if (!currentCategory) uncategorized++;
+        };
+        rows.push(row);
+        if (!currentCategory) {
+          uncategorized++;
+          headerlessRows.push(row);
+        }
       } else {
         skippedNoPrice++;
+        noPriceNames.push(inline.name || '(empty)');
       }
       continue;
     }
 
-    const ctx = { unmatched: names.length > prices.length, nextIsPrice: nextIsPrice(idx) };
+    // Under a single-price-for-all fan-out every name already has its price,
+    // so nothing is "waiting" and later names must not collapse into
+    // descriptions of the previous item.
+    const fanOut = (currentCategory === 'Menú Kids' || sectionFlatPrice) && prices.length > 0;
+    const ctx = { unmatched: names.length > prices.length && !fanOut, nextIsPrice: nextIsPrice(idx) };
     if (names.length > 0 && isDescriptionContinuation(line, ctx)) {
       const last = names[names.length - 1];
       last.description = last.description ? `${last.description} ${line}` : line;
@@ -270,15 +369,25 @@ function parseMenuText(text) {
   if (skippedExtraPrice > 0) warnings.push(`${skippedExtraPrice} prices ignored: no matching item name`);
   if (uncategorized > 0) warnings.push(`${uncategorized} items have no category (assigned to "General")`);
 
-  return { rows, warnings };
+  // Actionable details: same facts as the string summaries above, but with
+  // the actual values so the importer can show what needs fixing. The
+  // `warnings` strings stay untouched for backward compatibility.
+  if (noPriceNames.length > 0) details.push({ type: 'no_price', names: noPriceNames });
+  for (const entry of orphanEntries) {
+    details.push({ type: 'orphan_price', prices: entry.prices, category: entry.category });
+  }
+  const generalNames = rows.filter((r) => r.category === 'General').map((r) => r.name);
+  if (generalNames.length > 0) details.push({ type: 'no_category', names: generalNames });
+
+  return { rows, warnings, details };
 }
 
-// PDF buffer -> { text, rows, warnings }. Throws on unreadable PDFs.
+// PDF buffer -> { text, rows, warnings, details }. Throws on unreadable PDFs.
 async function parsePdfBuffer(buffer) {
   const data = await pdfParse(buffer);
   const text = data.text || '';
-  const { rows, warnings } = parseMenuText(text);
-  return { text, rows, warnings };
+  const { rows, warnings, details } = parseMenuText(text);
+  return { text, rows, warnings, details };
 }
 
 module.exports = { parseMenuText, parsePdfBuffer, CATEGORIES };

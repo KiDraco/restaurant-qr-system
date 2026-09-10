@@ -164,4 +164,122 @@ DESCUENTO PARA SOCIOS`;
       { name: 'Milanesa', description: '', price: 33500, category: 'Parrilla' },
     ]);
   });
+
+  it('replicates a single KIDS flat price to every item in the section', () => {
+    const text = `MENÚ KIDS
+TODOS LOS PLATOS $17500
+Milanesa con papas fritas
+Chicken fingers
+Ñoquis`;
+
+    const { rows, warnings } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Milanesa con papas fritas', description: '', price: 17500, category: 'Menú Kids' },
+      { name: 'Chicken fingers', description: '', price: 17500, category: 'Menú Kids' },
+      { name: 'Ñoquis', description: '', price: 17500, category: 'Menú Kids' },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('replicates a lone detached KIDS price across all names', () => {
+    const { rows, warnings } = parseMenuText('MENÚ KIDS\nMilanesa con papas fritas\nChicken fingers\n$17500');
+
+    expect(rows).toEqual([
+      { name: 'Milanesa con papas fritas', description: '', price: 17500, category: 'Menú Kids' },
+      { name: 'Chicken fingers', description: '', price: 17500, category: 'Menú Kids' },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('drops SERVICIO DE MESA with its price instead of orphaning it', () => {
+    const text = `PARRILLA
+Bife de chorizo
+$13500
+SERVICIO DE MESA $2500
+POSTRES
+Flan casero
+$4000`;
+
+    const { rows, warnings, details } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Bife de chorizo', description: '', price: 13500, category: 'Parrilla' },
+      { name: 'Flan casero', description: '', price: 4000, category: 'Postres' },
+    ]);
+    expect(warnings).toEqual([]);
+    expect(details).toEqual([]);
+  });
+
+  it('drops a detached price glued to a surcharge line', () => {
+    const { rows, warnings } = parseMenuText('PARRILLA\nBife de chorizo\n$13500\nSERVICIO DE MESA\n$2500');
+
+    expect(rows).toEqual([
+      { name: 'Bife de chorizo', description: '', price: 13500, category: 'Parrilla' },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('never treats unit-suffixed or edition numbers as prices', () => {
+    const text = `BEBIDAS
+Agua con gas
+12 AÑOS
+1.75L
+600gr
+N°1
+$4000`;
+
+    const { rows, warnings, details } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Agua con gas', description: '12 AÑOS 1.75L 600gr', price: 4000, category: 'Bebidas' },
+    ]);
+    expect(warnings).toEqual([]);
+    expect(details).toEqual([]);
+  });
+
+  it('assigns leading names before any header to the first header below', () => {
+    const text = `Empanada de carne
+$4000
+ENTRADAS
+Provoleta
+$13500`;
+
+    const { rows, warnings } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Empanada de carne', description: '', price: 4000, category: 'Entradas' },
+      { name: 'Provoleta', description: '', price: 13500, category: 'Entradas' },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('re-categorizes leading inline pairs under the first header below', () => {
+    const { rows, warnings } = parseMenuText('Flan casero $4000\nPOSTRES\nHelado\n$4500');
+
+    expect(rows).toEqual([
+      { name: 'Flan casero', description: '', price: 4000, category: 'Postres' },
+      { name: 'Helado', description: '', price: 4500, category: 'Postres' },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('reports surplus prices and missing prices as actionable details', () => {
+    const text = `MERCHANDISING
+Remera
+$4000
+$5000
+POSTRES
+Flan sin precio`;
+
+    const { rows, warnings, details } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Remera', description: '', price: 4000, category: 'Merchandising' },
+    ]);
+    expect(details).toContainEqual({ type: 'orphan_price', prices: [5000], category: 'Merchandising' });
+    expect(details).toContainEqual({ type: 'no_price', names: ['Flan sin precio'] });
+    expect(warnings.join(' ')).toMatch(/prices ignored/);
+    expect(warnings.join(' ')).toMatch(/no price found/);
+  });
 });

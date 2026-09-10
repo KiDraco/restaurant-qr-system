@@ -110,7 +110,7 @@ class MenuController {
         return res.status(400).json({ error: 'El PDF supera el límite de 5MB' });
       }
 
-      const { rows, warnings } = await parsePdfBuffer(buffer);
+      const { rows, warnings, details } = await parsePdfBuffer(buffer);
 
       // Same shape as the Excel parse endpoint so the import wizard
       // can reuse its mapping/review/confirm steps unchanged.
@@ -122,7 +122,7 @@ class MenuController {
       ];
       const suggestions = { name: 'name', price: 'price', category: 'category', description: 'description' };
 
-      res.json({ columns, preview: rows, totalRows: rows.length, suggestions, warnings });
+      res.json({ columns, preview: rows, totalRows: rows.length, suggestions, warnings, details });
     } catch (error) {
       next(error);
     }
