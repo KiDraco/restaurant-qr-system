@@ -98,6 +98,7 @@ const NOISE_PATTERNS = [
   /PARA COMPARTIR/, // share notes ("TODAS SON PARA COMPARTIR")
   /^CON PAPAS Y BATATAS FRITAS\.?$/, // section note (anchored: "Con batatas fritas." descriptions survive)
   /TU MESA/, // marketing ("¿TU MESA? DE LACADÉ...")
+  /^MENU$/, // menu title, never an item
   /\b\d{4,}\s*[-\s]\s*\d{3,}\b/, // phone fragments ("112590-2215"); prices never contain dashes/spaces inside digits
   /^(VEGGIE|VEGANO?A?|VEGETARIANO?A?|SIN TACC|GLUTEN FREE|APTO CELIACO|CELIACO)$/, // lone diet markers
   /^N\.?\s*°?\s*\d+\b/, // edition markers ("N°1", "N 1")
@@ -108,7 +109,7 @@ const NOISE_PATTERNS = [
 // $17500" over the KIDS items): never an item, its price fans out to
 // every name in the section (see flushSection). Compared spaceless so
 // letter-spaced variants match too.
-const FLAT_PRICE_SIGNAL = /TODOSLOSPLATOS|PRECIOUNICO|TODOALMISMOPRECIO/;
+const FLAT_PRICE_SIGNAL = /TODOSLOSPLATOS|TODOSLOSEPLATOS|PRECIOUNICO|TODOALMISMOPRECIO/;
 
 // Surcharge lines ("SERVICIO DE MESA"): a detached price on the very next
 // line belongs to the surcharge, not to any item, so it is dropped together
@@ -182,7 +183,7 @@ function isNoteFragment(line, norm) {
     .filter(Boolean);
   if (words.length < 2) return false;
   return NOTE_PHRASES.some(({ words: phrase, anchor }) => {
-    if (words.length >= phrase.length) return false;
+    if (words.length > phrase.length) return false;
     if (anchor && !words.includes(anchor)) return false;
     for (let i = 0; i + words.length <= phrase.length; i++) {
       let ok = true;
@@ -270,6 +271,8 @@ function isDescriptionContinuation(line, { unmatched, nextIsPrice, priceCount })
   if (line.length > 60) return true;
   if (line.endsWith('.')) return true;
   if (/^[a-záéíóúñü]/.test(line)) return true;
+  // Preposition-starting lines are descriptions, never dish names
+  if (/^(CON|DE|Y|SIN|PARA|AL|DEL|A|DE)\b/.test(line.toUpperCase())) return true;
   if (line.length <= 60 && unmatched && priceCount > 0 && !nextIsPrice) return true;
   return false;
 }
