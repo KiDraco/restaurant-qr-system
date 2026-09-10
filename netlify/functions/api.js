@@ -1,3 +1,4 @@
+// CACHE-BUST: v20260910-block-format
 // @libsql/client devuelve BigInt; JSON no lo serializa sin esto
 if (!BigInt.prototype.toJSON) {
   BigInt.prototype.toJSON = function () {
