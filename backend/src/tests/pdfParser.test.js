@@ -389,4 +389,61 @@ Flan sin precio`;
     expect(warnings.join(' ')).toMatch(/prices ignored/);
     expect(warnings.join(' ')).toMatch(/no price found/);
   });
+
+  it('handles BLOCK-FORMAT PDFs: all names then detached price block', () => {
+    const text = `PASTAS
+Fettuccine Alfredo
+Chicken Parm
+Ravioli
+$15000
+$20000
+$18000`;
+
+    const { rows, warnings } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Fettuccine Alfredo', description: '', price: 15000, category: 'Pastas' },
+      { name: 'Chicken Parm', description: '', price: 20000, category: 'Pastas' },
+      { name: 'Ravioli', description: '', price: 18000, category: 'Pastas' },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('handles BLOCK-FORMAT with interleaved descriptions before price block', () => {
+    const text = `MILANESAS
+Milanesa clásica
+Con batatas fritas
+Milanesa napolitana
+$33500
+$34000`;
+
+    const { rows } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Milanesa clásica', description: 'Con batatas fritas', price: 33500, category: 'Milanesas' },
+      { name: 'Milanesa napolitana', description: '', price: 34000, category: 'Milanesas' },
+    ]);
+  });
+
+  it('handles BLOCK-FORMAT: names block followed by prices for multiple sections', () => {
+    const text = `MILANESAS
+Milanesa clásica
+Milanesa napolitana
+$33500
+$34000
+PASTAS
+Fettuccine Alfredo
+Ravioli
+$15000
+$18000`;
+
+    const { rows } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Milanesa clásica', description: '', price: 33500, category: 'Milanesas' },
+      { name: 'Milanesa napolitana', description: '', price: 34000, category: 'Milanesas' },
+      { name: 'Fettuccine Alfredo', description: '', price: 15000, category: 'Pastas' },
+      { name: 'Ravioli', description: '', price: 18000, category: 'Pastas' },
+    ]);
+  });
 });

@@ -247,18 +247,30 @@ function splitInlinePrice(line) {
   return { name: m[1].trim(), price: value };
 }
 
+function isDescriptionLikeName(name) {
+  const norm = normalize(name).replace(/[^A-Z0-9\s]/g, '');
+  const firstWord = norm.split(/\s+/)[0];
+  const DESCRIPTION_STARTERS = ['CON', 'DE', 'Y', 'SIN', 'PARA'];
+  if (DESCRIPTION_STARTERS.some(s => norm.startsWith(s + ' ') || norm === s)) return true;
+  if (firstWord && /^[a-záéíóúñü]/.test(firstWord)) return true;
+  // Digit-starting or unit-marker lines are descriptions, not dish names
+  if (/^\d/.test(firstWord)) return true;
+  return false;
+}
+
 // A line that continues the previous item's description rather than
 // starting a new item. Strong signals (lowercase start, trailing period,
 // very long, list/bullet style) always attach to a pending name. A short
 // uppercase line without period (e.g. "Con batatas fritas") is only a
-// continuation when the previous name is still unmatched AND the next line
-// is not a price — otherwise it is an item name waiting for its own price.
-function isDescriptionContinuation(line, { unmatched, nextIsPrice }) {
+// continuation when the previous name is still unmatched AND there are
+// already prices in the section (interleaved format). In block format
+// (no prices yet), all uppercase lines are treated as names.
+function isDescriptionContinuation(line, { unmatched, nextIsPrice, priceCount }) {
   if (/^[(\-•·]/.test(line)) return true;
   if (line.length > 60) return true;
   if (line.endsWith('.')) return true;
   if (/^[a-záéíóúñü]/.test(line)) return true;
-  if (line.length <= 60 && unmatched && !nextIsPrice) return true;
+  if (line.length <= 60 && unmatched && priceCount > 0 && !nextIsPrice) return true;
   return false;
 }
 
@@ -309,6 +321,22 @@ function parseMenuText(text) {
 
   function flushSection() {
     const cat = currentCategory || 'General';
+    // Merge description-like names into previous names when there
+    // are more names than prices (e.g. block format where a name
+    // like "Con batatas fritas" follows its item "Milanesa clásica").
+    if (names.length > prices.length) {
+      let i = 0;
+      while (i < names.length && names.length > prices.length) {
+        if (i + 1 < names.length && isDescriptionLikeName(names[i + 1].name)) {
+          names[i].description = names[i].description
+            ? `${names[i].description} ${names[i + 1].name}`
+            : names[i + 1].name;
+          names.splice(i + 1, 1);
+        } else {
+          i++;
+        }
+      }
+    }
     // Single-price-for-all section (KIDS "TODOS LOS PLATOS $17500"):
     // exactly 1 price fans out to every name instead of zipping 1:1.
     const flatAll =
@@ -356,63 +384,19 @@ function parseMenuText(text) {
     const norm = normalize(line);
     const spaceless = norm.replace(/\s+/g, '');
 
-    // Single-price-for-all signal line: never an item. Its price (when
-    // present) joins the section pool and fans out at flush time.
-    if (FLAT_PRICE_SIGNAL.test(spaceless)) {
-      const found = CATEGORIES.find((c) => spaceless.includes(c.key.replace(/\s+/g, '')));
-      if (found && found.label !== currentCategory) {
-        if (sawHeader) {
-          flushSection();
-          currentCategory = found.label;
-          wineSubgroup = null;
-        } else {
-          adoptFirstHeader(found.label);
-        }
-      }
-      const pm = /\$\s*([\d.,]{3,8})/.exec(line);
-      if (pm) {
-        const value = parseInt(pm[1].replace(/[.,]/g, ''), 10);
-        if (Number.isFinite(value) && value > 0 && String(value).length >= 3 && String(value).length <= 6) {
-          prices.push(value);
-        }
-      }
-      sectionFlatPrice = true;
-      continue;
-    }
-
     const label = categoryLabelFor(norm);
     if (label) {
-      if (sawHeader) {
-        flushSection();
-        currentCategory = label;
-        wineSubgroup = null;
-      } else {
-        adoptFirstHeader(label);
-      }
+      if (sawHeader) { flushSection(); currentCategory = label; wineSubgroup = null; }
+      else { adoptFirstHeader(label); }
       continue;
     }
-    // Header with an appended restaurant note ("MILANESAS CON PAPAS Y
-    // BATATAS FRITAS"): the stripped remainder exact-matched a category.
-    // An embedded price on a kids flat-price header joins the section pool
-    // and fans out at flush time, mirroring the FLAT_PRICE_SIGNAL path.
     const suffixed = suffixedHeaderLabelFor(norm);
     if (suffixed) {
-      if (sawHeader) {
-        flushSection();
-        currentCategory = suffixed.label;
-        wineSubgroup = null;
-      } else {
-        adoptFirstHeader(suffixed.label);
-      }
+      if (sawHeader) { flushSection(); currentCategory = suffixed.label; wineSubgroup = null; }
+      else { adoptFirstHeader(suffixed.label); }
       if (suffixed.flat || suffixed.label === 'Menú Kids') {
         const pm = /\$\s*([\d.,]{3,8})/.exec(line);
-        if (pm) {
-          const value = parseInt(pm[1].replace(/[.,]/g, ''), 10);
-          if (Number.isFinite(value) && value > 0 && String(value).length >= 3 && String(value).length <= 6) {
-            prices.push(value);
-            sectionFlatPrice = true;
-          }
-        }
+        if (pm) { const value = parseInt(pm[1].replace(/[.,]/g, ''), 10); if (Number.isFinite(value) && value > 0 && String(value).length >= 3 && String(value).length <= 6) { prices.push(value); sectionFlatPrice = true; } }
       }
       continue;
     }
@@ -435,6 +419,25 @@ function parseMenuText(text) {
         const nxt = lines[idx + 1];
         if (nxt !== undefined && parseStandalonePrice(nxt) !== null) idx++;
       }
+      continue;
+    }
+
+    // Single-price-for-all section ("TODOS LOS PLATOS $17500"):
+    // price fans out to every name in the section instead of zipping 1:1.
+    if (FLAT_PRICE_SIGNAL.test(spaceless)) {
+      const found = CATEGORIES.find((c) => spaceless.includes(c.key.replace(/\s+/g, '')));
+      if (found && found.label !== currentCategory) {
+        if (sawHeader) { flushSection(); currentCategory = found.label; wineSubgroup = null; }
+        else { adoptFirstHeader(found.label); }
+      }
+      const pm = /\$\s*([\d.,]{3,8})/.exec(line);
+      if (pm) {
+        const value = parseInt(pm[1].replace(/[.,]/g, ''), 10);
+        if (Number.isFinite(value) && value > 0 && String(value).length >= 3 && String(value).length <= 6) {
+          prices.push(value);
+        }
+      }
+      sectionFlatPrice = true;
       continue;
     }
 
@@ -472,7 +475,7 @@ function parseMenuText(text) {
     // so nothing is "waiting" and later names must not collapse into
     // descriptions of the previous item.
     const fanOut = (currentCategory === 'Menú Kids' || sectionFlatPrice) && prices.length > 0;
-    const ctx = { unmatched: names.length > prices.length && !fanOut, nextIsPrice: nextIsPrice(idx) };
+    const ctx = { unmatched: names.length > prices.length && !fanOut, nextIsPrice: nextIsPrice(idx), priceCount: prices.length };
     if (names.length > 0 && isDescriptionContinuation(line, ctx)) {
       const last = names[names.length - 1];
       last.description = last.description ? `${last.description} ${line}` : line;
