@@ -1,5 +1,6 @@
-// CACHE-BUST: v20260910-block-format-2
-// Block-format PDF parser fix: names+prices in separate blocks per section
+// CACHE-BUST: v20260910-block-format-3
+// Block-format PDF parser: names+prices separate blocks per section
+// FORCE_REBUILD: 2026-09-10T20:58:00Z
 // @libsql/client devuelve BigInt; JSON no lo serializa sin esto
 if (!BigInt.prototype.toJSON) {
   BigInt.prototype.toJSON = function () {
