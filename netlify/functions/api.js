@@ -35,6 +35,7 @@ wrapper.use((req, res, next) => {
 });
 
 // Middleware: ajusta el path de Netlify Functions al formato que Express espera
+// pdfParser v3 deployed: headers con notas pegadas, recargos, kids flat-price
 wrapper.use((req, res, next) => {
   const match = req.url.match(/^\/\.netlify\/functions\/api(\/.*)?$/);
   if (match) {
