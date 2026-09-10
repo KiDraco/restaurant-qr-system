@@ -60,4 +60,108 @@ describe('pdfParser.parseMenuText', () => {
 
     expect(rows).toEqual([]);
   });
+
+  it('matches letter-spaced headers and the ENTRADAS PARRI alias', () => {
+    const text = `E N T R A D A S
+Empanada de carne
+$4000
+E N T R A D A S   P A R R I
+Provoleta
+$13500
+M E N Ú   K I D S
+Nuggets con papas
+$4500`;
+
+    const { rows } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Empanada de carne', description: '', price: 4000, category: 'Entradas' },
+      { name: 'Provoleta', description: '', price: 13500, category: 'Entradas' },
+      { name: 'Nuggets con papas', description: '', price: 4500, category: 'Menú Kids' },
+    ]);
+  });
+
+  it('zips detached name and price blocks without crossing sections', () => {
+    const text = `T O R T I L L A S
+Tortilla de papa
+Tortilla rellena
+$4000
+$13500
+P A R R I L L A
+Bife de chorizo (600gr)
+$13500`;
+
+    const { rows, warnings } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Tortilla de papa', description: '', price: 4000, category: 'Tortillas' },
+      { name: 'Tortilla rellena', description: '', price: 13500, category: 'Tortillas' },
+      { name: 'Bife de chorizo (600gr)', description: '', price: 13500, category: 'Parrilla' },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('keeps wine subgroups as VINOS with description prefix, never items', () => {
+    const text = `V I N O S
+DE LA CASA
+Tinto de la casa
+$4000
+ESCORIHUELA GASCÓN
+Malbec reserva
+Con notas de frutos rojos.
+$13500
+CHAMPAGNES
+Extra brut
+$13500`;
+
+    const { rows } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Tinto de la casa', description: '[De la casa]', price: 4000, category: 'Vinos' },
+      { name: 'Malbec reserva', description: '[Escorihuela Gascón] Con notas de frutos rojos.', price: 13500, category: 'Vinos' },
+      { name: 'Extra brut', description: '[Champagnes]', price: 13500, category: 'Vinos' },
+    ]);
+  });
+
+  it('attaches uppercase continuations without period and drops portion/noise lines', () => {
+    const text = `MILANESAS
+Milanesa clásica
+Con batatas fritas
+Milanesa napolitana
+$33500
+$34000
+Para 2 personas
+TODAS SON PARA COMPARTIR
+CON PAPAS Y BATATAS FRITAS
+MEDIOS DE PAGO
+BODEGON.LACADE 112590-2215
+¿TU MESA? DE LACADÉ
+ESTA ES LA N°1 QUE TE SIGUE A TODAS PARTES
+DESCUENTO PARA SOCIOS`;
+
+    const { rows } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Milanesa clásica', description: 'Con batatas fritas', price: 33500, category: 'Milanesas' },
+      { name: 'Milanesa napolitana', description: '', price: 34000, category: 'Milanesas' },
+    ]);
+  });
+
+  it('pairs inline prices immediately without stealing detached prices', () => {
+    const { rows } = parseMenuText('POSTRES\nFlan casero\nHelado $4000\n$4500');
+
+    expect(rows).toEqual([
+      { name: 'Helado', description: '', price: 4000, category: 'Postres' },
+      { name: 'Flan casero', description: '', price: 4500, category: 'Postres' },
+    ]);
+  });
+
+  it('keeps weight suffixes and strips trailing icon residue from names', () => {
+    const { rows } = parseMenuText('PARRILLA\nBife de chorizo (500gr) ●\nMilanesa (V)\n$13500\n$33500');
+
+    expect(rows).toEqual([
+      { name: 'Bife de chorizo (500gr)', description: '', price: 13500, category: 'Parrilla' },
+      { name: 'Milanesa', description: '', price: 33500, category: 'Parrilla' },
+    ]);
+  });
 });
