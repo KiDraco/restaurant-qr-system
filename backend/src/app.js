@@ -40,6 +40,7 @@ app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Security headers
+// pdfParser v3: headers suffixed, kids flat, recargos, actionable details
 app.use(helmet());
 
 // Cookie parser for httpOnly tokens
