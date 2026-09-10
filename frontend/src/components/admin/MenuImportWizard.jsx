@@ -10,6 +10,7 @@ export default function MenuImportWizard({ onClose, onImported }) {
   const [parsed, setParsed] = useState(null);
   const [mapping, setMapping] = useState({ name: '', price: '', category: '', description: '' });
   const [rows, setRows] = useState([]);
+  const [warnings, setWarnings] = useState([]);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,23 +20,28 @@ export default function MenuImportWizard({ onClose, onImported }) {
     const selected = e.target.files[0];
     if (!selected) return;
 
-    if (!selected.name.match(/\.xlsx?$/i)) {
-      setError('Solo archivos .xlsx o .xls');
+    if (!selected.name.match(/\.(xlsx?|pdf)$/i)) {
+      setError('Solo archivos .xlsx, .xls o .pdf');
       return;
     }
 
     setError('');
+    setWarnings([]);
     setFile(selected);
     setLoading(true);
 
     try {
-      const data = await api.importMenuParse(selected);
+      const isPdf = /\.pdf$/i.test(selected.name);
+      const data = isPdf
+        ? await api.importMenuPdfParse(selected)
+        : await api.importMenuParse(selected);
       if (!data.columns || data.columns.length === 0) {
         setError('No se pudieron leer columnas del archivo');
         setLoading(false);
         return;
       }
       setParsed(data);
+      setWarnings(data.warnings || []);
       setMapping({
         name: data.suggestions?.name || '',
         price: data.suggestions?.price || '',
@@ -75,7 +81,7 @@ export default function MenuImportWizard({ onClose, onImported }) {
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <FileSpreadsheet className="w-6 h-6 text-orange-600" />
-            Importar Menú desde Excel
+            Importar Menú desde Excel o PDF
           </h3>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
             <X className="w-5 h-5 text-gray-500" />
@@ -121,11 +127,11 @@ export default function MenuImportWizard({ onClose, onImported }) {
               <p className="text-lg font-medium text-gray-700 mb-2">
                 {file ? file.name : 'Hacé clic para seleccionar un archivo'}
               </p>
-              <p className="text-sm text-gray-500">Formatos: .xlsx, .xls</p>
+              <p className="text-sm text-gray-500">Formatos: .xlsx, .xls, .pdf</p>
               <input
                 ref={fileRef}
                 type="file"
-                accept=".xlsx,.xls"
+                accept=".xlsx,.xls,.pdf"
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -137,8 +143,15 @@ export default function MenuImportWizard({ onClose, onImported }) {
 
           {step === 1 && parsed && (
             <div className="space-y-4">
+              {warnings.length > 0 && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm space-y-1">
+                  {warnings.map((w, i) => (
+                    <p key={i}>⚠️ {w}</p>
+                  ))}
+                </div>
+              )}
               <p className="text-sm text-gray-600">
-                Asigná cada columna del Excel al campo correspondiente:
+                Asigná cada columna al campo correspondiente:
               </p>
               {[
                 { key: 'name', label: 'Nombre del producto', required: true },

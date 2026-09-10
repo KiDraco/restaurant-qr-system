@@ -3,7 +3,7 @@ const router = express.Router();
 const menuController = require('../controllers/menuController');
 const { verifyToken, requireRole } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
-const { menuItemSchema, menuItemUpdateSchema } = require('../validators/schemas');
+const { menuItemSchema, menuItemUpdateSchema, menuImportParseSchema } = require('../validators/schemas');
 
 // GET /api/menu - Obtener todos los productos (público)
 router.get('/', menuController.getAllMenuItems);
@@ -19,5 +19,9 @@ router.delete('/:id', verifyToken, requireRole('admin'), menuController.deleteMe
 // Importar menú desde Excel (admin-only)
 router.post('/import/parse', verifyToken, requireRole('admin'), menuController.importParse);
 router.post('/import/confirm', verifyToken, requireRole('admin'), menuController.importConfirm);
+
+// Importar menú desde PDF (admin-only). Parse returns the same shape as
+// the Excel endpoint; confirm reuses POST /import/confirm unchanged.
+router.post('/import/pdf-parse', verifyToken, requireRole('admin'), validate(menuImportParseSchema), menuController.importPdfParse);
 
 module.exports = router;

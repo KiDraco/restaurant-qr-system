@@ -45,6 +45,10 @@ const tableGenerateSchema = z.object({
   numberOfTables: z.number().int().positive().max(100)
 });
 
+const menuImportParseSchema = z.object({
+  fileBase64: z.string().min(100, 'Archivo inválido')
+});
+
 module.exports = {
   loginSchema,
   registerSchema,
@@ -53,5 +57,6 @@ module.exports = {
   orderSchema,
   promotionSchema,
   promotionUpdateSchema,
-  tableGenerateSchema
+  tableGenerateSchema,
+  menuImportParseSchema
 };

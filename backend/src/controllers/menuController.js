@@ -1,5 +1,9 @@
 const MenuItem = require('../models/MenuItem');
 const ExcelParser = require('../services/excelParser');
+const { parsePdfBuffer } = require('../services/pdfParser');
+
+// Decoded file-size cap for PDF menu imports (~5MB).
+const PDF_IMPORT_MAX_BYTES = 5 * 1024 * 1024;
 
 class MenuController {
   async createMenuItem(req, res, next) {
@@ -86,6 +90,39 @@ class MenuController {
       const buffer = Buffer.from(fileBase64, 'base64');
       const result = ExcelParser.parse(buffer);
       res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async importPdfParse(req, res, next) {
+    try {
+      const { fileBase64 } = req.body;
+      if (!fileBase64) {
+        return res.status(400).json({ error: 'Archivo requerido' });
+      }
+
+      const buffer = Buffer.from(fileBase64, 'base64');
+      if (buffer.length === 0) {
+        return res.status(400).json({ error: 'Archivo vacío' });
+      }
+      if (buffer.length > PDF_IMPORT_MAX_BYTES) {
+        return res.status(400).json({ error: 'El PDF supera el límite de 5MB' });
+      }
+
+      const { rows, warnings } = await parsePdfBuffer(buffer);
+
+      // Same shape as the Excel parse endpoint so the import wizard
+      // can reuse its mapping/review/confirm steps unchanged.
+      const columns = [
+        { key: 'name', label: 'name', sample: rows[0] ? String(rows[0].name).slice(0, 50) : '' },
+        { key: 'price', label: 'price', sample: rows[0] ? String(rows[0].price).slice(0, 50) : '' },
+        { key: 'category', label: 'category', sample: rows[0] ? String(rows[0].category).slice(0, 50) : '' },
+        { key: 'description', label: 'description', sample: rows[0] ? String(rows[0].description).slice(0, 50) : '' },
+      ];
+      const suggestions = { name: 'name', price: 'price', category: 'category', description: 'description' };
+
+      res.json({ columns, preview: rows, totalRows: rows.length, suggestions, warnings });
     } catch (error) {
       next(error);
     }

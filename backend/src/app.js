@@ -35,7 +35,8 @@ app.use(cors({
   origin: allowedOrigins,
   credentials: true
 }));
-app.use(express.json());
+// Raised from the 100kb default so base64 menu imports (Excel/PDF, up to ~5MB) fit.
+app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Security headers
