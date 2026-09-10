@@ -1,4 +1,5 @@
-// CACHE-BUST: v20260910-block-format
+// CACHE-BUST: v20260910-block-format-2
+// Block-format PDF parser fix: names+prices in separate blocks per section
 // @libsql/client devuelve BigInt; JSON no lo serializa sin esto
 if (!BigInt.prototype.toJSON) {
   BigInt.prototype.toJSON = function () {
