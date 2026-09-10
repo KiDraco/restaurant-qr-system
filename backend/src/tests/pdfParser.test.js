@@ -264,6 +264,113 @@ $13500`;
     expect(warnings).toEqual([]);
   });
 
+  it('splits headers with appended notes into correct sections without orphans', () => {
+    const text = `SALSAS ELEGÍ A TU GUSTO
+Salsa blanca
+Salsa mixta
+$4000
+$6000
+PARRILLA NO INCLUYE GUARNICIÓN
+Bife de chorizo
+$13500
+MILANESAS CON PAPAS Y BATATAS FRITAS
+Milanesa clásica
+$33500`;
+
+    const { rows, warnings, details } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Salsa blanca', description: '', price: 4000, category: 'Salsas' },
+      { name: 'Salsa mixta', description: '', price: 6000, category: 'Salsas' },
+      { name: 'Bife de chorizo', description: '', price: 13500, category: 'Parrilla' },
+      { name: 'Milanesa clásica', description: '', price: 33500, category: 'Milanesas' },
+    ]);
+    expect(warnings).toEqual([]);
+    expect(details).toEqual([]);
+  });
+
+  it('splits TORTILLAS/PRINCIPALES suffixed headers and keeps single-line kids flat-price headers fanning out', () => {
+    const text = `TORTILLAS TODAS SON PARA COMPARTIR
+Tortilla de papa
+$17500
+PRINCIPALES SUGERENCIAS DEL CHEF
+Lomo al malbec
+$35500
+MENÚ KIDS TODOS LOS PLATOS $17500
+Milanesa con papas fritas
+Chicken fingers`;
+
+    const { rows, warnings, details } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Tortilla de papa', description: '', price: 17500, category: 'Tortillas' },
+      { name: 'Lomo al malbec', description: '', price: 35500, category: 'Principales' },
+      { name: 'Milanesa con papas fritas', description: '', price: 17500, category: 'Menú Kids' },
+      { name: 'Chicken fingers', description: '', price: 17500, category: 'Menú Kids' },
+    ]);
+    expect(warnings).toEqual([]);
+    expect(details).toEqual([]);
+  });
+
+  it('drops torn-off note fragments but keeps real descriptions', () => {
+    const text = `MILANESAS
+Milanesa clásica
+Con batatas fritas.
+CON PAPAS Y
+BATATAS FRITAS
+TODAS SON PARA
+Y BATATAS FRITAS
+$33500`;
+
+    const { rows, warnings, details } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Milanesa clásica', description: 'Con batatas fritas.', price: 33500, category: 'Milanesas' },
+    ]);
+    expect(warnings).toEqual([]);
+    expect(details).toEqual([]);
+  });
+
+  it('never treats Parrillada items as PARRILLA headers', () => {
+    const text = `PARRILLA
+Parrillada completa $60000
+Parrillada para 2 $60000
+Bife de chorizo
+$13500`;
+
+    const { rows, warnings, details } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Parrillada completa', description: '', price: 60000, category: 'Parrilla' },
+      { name: 'Parrillada para 2', description: '', price: 60000, category: 'Parrilla' },
+      { name: 'Bife de chorizo', description: '', price: 13500, category: 'Parrilla' },
+    ]);
+    expect(warnings).toEqual([]);
+    expect(details).toEqual([]);
+  });
+
+  it('keeps diet-icon-suffixed names instead of eating or misclassifying them', () => {
+    const text = `ENSALADAS
+Ensalada 5 ingredientes ◆
+$4000
+BEBIDAS
+Línea Coca 600cc ●
+$7000
+MENÚ KIDS
+Combo pingüino + Soda ★
+$17500`;
+
+    const { rows, warnings, details } = parseMenuText(text);
+
+    expect(rows).toEqual([
+      { name: 'Ensalada 5 ingredientes', description: '', price: 4000, category: 'Ensaladas' },
+      { name: 'Línea Coca 600cc', description: '', price: 7000, category: 'Bebidas' },
+      { name: 'Combo pingüino + Soda', description: '', price: 17500, category: 'Menú Kids' },
+    ]);
+    expect(warnings).toEqual([]);
+    expect(details).toEqual([]);
+  });
+
   it('reports surplus prices and missing prices as actionable details', () => {
     const text = `MERCHANDISING
 Remera

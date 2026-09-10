@@ -27,6 +27,36 @@ for (const c of CATEGORIES) CATEGORY_BY_KEY.set(c.key.replace(/\s+/g, ''), c.lab
 // Compound headers seen in the wild map to a canonical category.
 CATEGORY_BY_KEY.set('ENTRADASPARRI', 'Entradas');
 
+// Appended notes seen on restaurant category headers. Stripped BEFORE
+// header lookup (accent/case/space-insensitive via the normalized +
+// spaceless forms) so e.g. "MILANESAS CON PAPAS Y BATATAS FRITAS" splits
+// as MILANESAS. A strip only applies when the remainder is EXACTLY a known
+// category — never generic prefix matching, so an item like "Parrillada
+// completa" can never become a PARRILLA header.
+const HEADER_NOTE_SUFFIXES = [
+  'TODAS SON PARA COMPARTIR',
+  'CON PAPAS Y BATATAS FRITAS',
+  'NO INCLUYE GUARNICION',
+  'SUGERENCIAS DEL CHEF',
+  'ELEGI A TU GUSTO',
+];
+
+// Word-level note phrases for fragment detection (normalized,
+// accent-stripped, uppercase). A line whose words form a STRICT contiguous
+// subsequence of one of these is a torn-off note fragment, never an item.
+// Entries with an `anchor` only match when the line contains that word:
+// bare "12 AÑOS" is a legit wine-age description, only "HASTA ... 12 AÑOS"
+// residue is note noise.
+const NOTE_PHRASES = [
+  { words: ['TODAS', 'SON', 'PARA', 'COMPARTIR'], anchor: null },
+  { words: ['CON', 'PAPAS', 'Y', 'BATATAS', 'FRITAS'], anchor: null },
+  { words: ['NO', 'INCLUYE', 'GUARNICION'], anchor: null },
+  { words: ['SUGERENCIAS', 'DEL', 'CHEF'], anchor: null },
+  { words: ['ELEGI', 'A', 'TU', 'GUSTO'], anchor: null },
+  { words: ['TODOS', 'LOS', 'PLATOS'], anchor: null },
+  { words: ['HASTA', 'LOS', '12', 'ANOS'], anchor: 'HASTA' },
+  { words: ['HASTA', '12', 'ANOS'], anchor: 'HASTA' },
+];
 // Wine subgroup labels: subcategories of VINOS, never items. When one is
 // seen, following rows keep category "Vinos" with "[Subgroup]" prefixed to
 // the description.
@@ -100,6 +130,72 @@ function categoryLabelFor(norm) {
 
 function wineSubgroupFor(norm) {
   return WINE_SUBGROUP_BY_KEY.get(norm.replace(/\s+/g, '')) || null;
+}
+
+// Suffixed header lookup: strip a known appended note, then exact-match
+// the remainder. Compared spaceless so letter-spaced headers match too.
+// Returns { label, flat } or null. `flat` marks kids single-price headers
+// ("TODOS LOS PLATOS", optional price follows) whose price fans out.
+// The remainder must be EXACTLY a known category — this is allowlist
+// suffix-stripping, not prefix matching.
+function suffixedHeaderLabelFor(norm) {
+  const spaceless = norm.replace(/\s+/g, '');
+  for (const note of HEADER_NOTE_SUFFIXES) {
+    const noteSpaceless = note.replace(/\s+/g, '');
+    const idx = spaceless.indexOf(noteSpaceless);
+    if (idx > 0) {
+      const label = CATEGORY_BY_KEY.get(spaceless.slice(0, idx));
+      if (label) return { label, flat: false };
+    }
+  }
+  // Kids single-price suffix: price may follow on the same line.
+  {
+    const idx = spaceless.indexOf('TODOSLOSPLATOS');
+    if (idx > 0) {
+      const label = CATEGORY_BY_KEY.get(spaceless.slice(0, idx));
+      if (label) return { label, flat: true };
+    }
+  }
+  // Kids age-limit suffix ("HASTA 12 AÑOS" / "HASTA LOS 12 AÑOS").
+  {
+    const m = /HASTA(?:LOS)?12ANOS/.exec(spaceless);
+    if (m && m.index > 0) {
+      const label = CATEGORY_BY_KEY.get(spaceless.slice(0, m.index));
+      if (label) return { label, flat: false };
+    }
+  }
+  return null;
+}
+
+// Torn-off note fragment: every word of the line appears as a STRICT
+// contiguous run inside one known note phrase (e.g. "CON PAPAS Y" or
+// "BATATAS FRITAS" inside "CON PAPAS Y BATATAS FRITAS"). Real descriptions
+// carry lowercase letters or a terminal period ("Con batatas fritas.") and
+// are exempt — only ALL-CAPS residue is fragment noise. Single words are
+// exempt too (too risky: "Chef", "Soda" could be real items).
+function isNoteFragment(line, norm) {
+  if (/[a-záéíóúñü]/.test(line)) return false;
+  if (line.trim().endsWith('.')) return false;
+  const words = norm
+    .replace(/[^A-Z0-9\s]/g, '')
+    .split(/\s+/)
+    .filter(Boolean);
+  if (words.length < 2) return false;
+  return NOTE_PHRASES.some(({ words: phrase, anchor }) => {
+    if (words.length >= phrase.length) return false;
+    if (anchor && !words.includes(anchor)) return false;
+    for (let i = 0; i + words.length <= phrase.length; i++) {
+      let ok = true;
+      for (let j = 0; j < words.length; j++) {
+        if (phrase[i + j] !== words[j]) {
+          ok = false;
+          break;
+        }
+      }
+      if (ok) return true;
+    }
+    return false;
+  });
 }
 
 // Strip trailing diet-icon residue and stray symbols from item names.
@@ -295,6 +391,31 @@ function parseMenuText(text) {
       }
       continue;
     }
+    // Header with an appended restaurant note ("MILANESAS CON PAPAS Y
+    // BATATAS FRITAS"): the stripped remainder exact-matched a category.
+    // An embedded price on a kids flat-price header joins the section pool
+    // and fans out at flush time, mirroring the FLAT_PRICE_SIGNAL path.
+    const suffixed = suffixedHeaderLabelFor(norm);
+    if (suffixed) {
+      if (sawHeader) {
+        flushSection();
+        currentCategory = suffixed.label;
+        wineSubgroup = null;
+      } else {
+        adoptFirstHeader(suffixed.label);
+      }
+      if (suffixed.flat || suffixed.label === 'Menú Kids') {
+        const pm = /\$\s*([\d.,]{3,8})/.exec(line);
+        if (pm) {
+          const value = parseInt(pm[1].replace(/[.,]/g, ''), 10);
+          if (Number.isFinite(value) && value > 0 && String(value).length >= 3 && String(value).length <= 6) {
+            prices.push(value);
+            sectionFlatPrice = true;
+          }
+        }
+      }
+      continue;
+    }
     const subgroup = wineSubgroupFor(norm);
     if (subgroup) {
       if (sawHeader) {
@@ -306,6 +427,7 @@ function parseMenuText(text) {
       wineSubgroup = subgroup;
       continue;
     }
+    if (isNoteFragment(line, norm)) continue;
     if (isNoise(norm)) {
       // A detached price glued to a surcharge line is the surcharge's own
       // amount: drop it with the line so it never becomes an orphan.
