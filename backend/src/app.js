@@ -75,7 +75,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.json({
     message: 'Restaurant QR API',
-    version: '1.0.0',
+    version: '1.0.0-block-format-fix-20260910',
     endpoints: {
       auth: '/api/auth',
       tables: '/api/tables',
