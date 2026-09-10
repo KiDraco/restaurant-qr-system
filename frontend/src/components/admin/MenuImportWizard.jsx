@@ -4,6 +4,63 @@ import api from '../../services/api';
 
 const STEPS = ['Archivo', 'Mapeo', 'Vista Previa', 'Resultado'];
 
+// Max values shown per detail group before collapsing into "+N more".
+const MAX_DETAIL_ITEMS = 30;
+
+function formatPrice(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? `$${n.toLocaleString('es-AR')}` : String(value);
+}
+
+// Collapsible rendering of backend pdf-parse `details` so importers can see
+// WHICH values were skipped (orphan prices, names without price, items
+// without category). Compact by design: one <details> row per group.
+function ImportDetails({ details }) {
+  if (!Array.isArray(details) || details.length === 0) return null;
+  return (
+    <div className="space-y-1">
+      {details.map((d, i) => {
+        if (!d || typeof d !== 'object') return null;
+        if (d.type === 'orphan_price' && Array.isArray(d.prices)) {
+          const shown = d.prices.slice(0, MAX_DETAIL_ITEMS);
+          const hidden = d.prices.length - shown.length;
+          return (
+            <details key={i} className="text-xs">
+              <summary className="cursor-pointer underline">
+                Orphan prices ({d.prices.length}){d.category ? ` — ${d.category}` : ''}:{' '}
+                {shown.map(formatPrice).join(', ')}
+                {hidden > 0 ? ` +${hidden} more` : ''}
+              </summary>
+              {hidden > 0 && (
+                <p className="pl-4 text-yellow-700">
+                  {d.prices.slice(MAX_DETAIL_ITEMS).map(formatPrice).join(', ')}
+                </p>
+              )}
+            </details>
+          );
+        }
+        if ((d.type === 'no_price' || d.type === 'no_category') && Array.isArray(d.names)) {
+          const shown = d.names.slice(0, MAX_DETAIL_ITEMS);
+          const hidden = d.names.length - shown.length;
+          const label = d.type === 'no_price' ? 'Skipped names' : 'Uncategorized names';
+          return (
+            <details key={i} className="text-xs">
+              <summary className="cursor-pointer underline">
+                {label} ({d.names.length}): {shown.join(', ')}
+                {hidden > 0 ? ` +${hidden} more` : ''}
+              </summary>
+              {hidden > 0 && (
+                <p className="pl-4 text-yellow-700">{d.names.slice(MAX_DETAIL_ITEMS).join(', ')}</p>
+              )}
+            </details>
+          );
+        }
+        return null;
+      })}
+    </div>
+  );
+}
+
 export default function MenuImportWizard({ onClose, onImported }) {
   const [step, setStep] = useState(0);
   const [file, setFile] = useState(null);
@@ -148,6 +205,7 @@ export default function MenuImportWizard({ onClose, onImported }) {
                   {warnings.map((w, i) => (
                     <p key={i}>⚠️ {w}</p>
                   ))}
+                  <ImportDetails details={parsed.details} />
                 </div>
               )}
               <p className="text-sm text-gray-600">
