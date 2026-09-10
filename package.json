@@ -19,7 +19,8 @@
   },
   "scripts": {
     "start": "node backend/server.js",
-    "build": "npm install"
+    "build": "npm install",
+    "build:functions": "zip-it-and-ship-it"
   },
   "engines": {
     "node": ">=14.0.0"
