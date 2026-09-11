@@ -24,7 +24,7 @@ function ItemSkeleton() {
 
 function LoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)]">
       <div className="max-w-lg mx-auto p-4">
         <div className="flex items-center gap-3 mb-6">
           <div className="h-10 w-10 bg-gray-100 rounded-full animate-pulse" />
@@ -82,6 +82,47 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
     fetchData();
   }, []);
 
+  // Theme activation: fetch active theme and inject CSS vars into :root
+  const [theme, setTheme] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchTheme() {
+      try {
+        const res = await fetch(`${API_URL}/theme/active`, { credentials: 'include' });
+        if (!res.ok) throw new Error('No theme');
+        const data = await res.json();
+        if (data && data.config && !cancelled) setTheme(data.config);
+      } catch (_) {
+        if (!cancelled) setTheme({ colors: { primary: '#FF6B6B', secondary: '#4ECDC4', background: '#FFFFFF', text: '#2A2A2A' }, font_family: 'system' });
+      }
+    }
+    fetchTheme();
+    return () => { cancelled = true; };
+  }, []);
+  useEffect(() => {
+    if (!theme) return;
+    const root = document.documentElement;
+    if (theme.colors) {
+      root.style.setProperty('--theme-primary', theme.colors.primary);
+      root.style.setProperty('--theme-secondary', theme.colors.secondary);
+      root.style.setProperty('--theme-background', theme.colors.background);
+      root.style.setProperty('--theme-text', theme.colors.text);
+    }
+    if (theme.font_family && theme.font_family !== 'system') {
+      const link = document.createElement('link');
+      link.rel = 'preload'; link.as = 'style';
+      link.href = `https://fonts.googleapis.com/css2:wght@400;600&family=${encodeURIComponent(theme.font_family)}`;
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+      const style = document.createElement('style');
+      style.textContent = `:root { font-family: '${theme.font_family}', system-ui, -apple-system, sans-serif !important; }`;
+      document.head.appendChild(style);
+    }
+    if (theme.background_type === 'gradient' && theme.background_value) root.style.setProperty('--theme-gradient', theme.background_value);
+    else if (theme.background_type === 'image' && theme.background_value) root.style.setProperty('--theme-bg-image', `url('${theme.background_value}')`);
+    else if (theme.background_type === 'color' && theme.background_value) root.style.setProperty('--theme-background', theme.background_value);
+  }, [theme]);
+  
   // Focus search on Cmd/Ctrl+K
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -169,7 +210,7 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
   if (loading) return <LoadingSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)]">
       {/* Toast notification */}
       {orderMessage && (
         <div
@@ -250,7 +291,7 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
               {promotions.map(promo => (
                 <div
                   key={promo.id}
-                  className="flex-shrink-0 bg-gradient-to-br from-orange-500 to-amber-500 text-white rounded-2xl p-4 min-w-[180px] shadow-lg shadow-orange-500/20"
+                  className="flex-shrink-0 bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white rounded-2xl p-4 min-w-[180px] shadow-lg shadow-[var(--theme-primary)/20]"
                   aria-label={`Promoción: ${promo.name}, ${promo.discount_percentage}% de descuento`}
                 >
                   <p className="text-2xl font-bold tracking-tight">{promo.discount_percentage}% OFF</p>
@@ -307,7 +348,7 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
               aria-checked={viewMode === 'list'}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 viewMode === 'list'
-                  ? 'bg-orange-600 text-white shadow-sm'
+                  ? 'bg-[var(--theme-primary)] text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-800'
               }`}
             >
@@ -320,7 +361,7 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
               aria-checked={viewMode === 'carousel'}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 viewMode === 'carousel'
-                  ? 'bg-orange-600 text-white shadow-sm'
+                  ? 'bg-[var(--theme-primary)] text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-800'
               }`}
             >
@@ -358,7 +399,7 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="mt-4 text-sm font-medium text-orange-600 hover:text-orange-700 transition-colors"
+                  className="mt-4 text-sm font-medium text-[var(--theme-text)] hover:text-[var(--theme-secondary)] transition-colors"
                 >
                   Limpiar búsqueda
                 </button>
@@ -385,7 +426,7 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
                         />
                       </>
                     ) : (
-                      <div className="w-full h-32 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+                      <div className="w-full h-32 bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] flex items-center justify-center">
                         <UtensilsCrossed className="w-8 h-8 text-orange-200" aria-hidden="true" />
                       </div>
                     )}
@@ -418,7 +459,7 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
                       <button
                         onClick={() => handleOrder(item.id)}
                         disabled={ordering === item.id}
-                        className="bg-orange-600 text-white px-3 py-1.5 rounded-xl text-xs font-semibold hover:bg-orange-700 active:bg-orange-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="bg-[var(--theme-primary)] text-white px-3 py-1.5 rounded-xl text-xs font-semibold hover:bg-orange-700 active:bg-orange-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         aria-label={`Pedir ${item.name}`}
                       >
                         {ordering === item.id ? (
@@ -466,7 +507,7 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
                           />
                         </>
                       ) : (
-                        <div className="w-full h-52 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+                        <div className="w-full h-52 bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] flex items-center justify-center">
                           <UtensilsCrossed className="w-12 h-12 text-orange-200" aria-hidden="true" />
                         </div>
                       )}
@@ -486,13 +527,13 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
                         <p className="text-sm text-gray-500 mt-1 leading-relaxed">{item.description}</p>
                       )}
                       <div className="flex items-center justify-between mt-4">
-                        <span className="text-xl font-bold text-orange-600">
+                        <span className="text-xl font-bold text-[var(--theme-text)]">
                           {formatPrice(item.price)}
                         </span>
                         <button
                           onClick={() => handleOrder(item.id)}
                           disabled={ordering === item.id}
-                          className="bg-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-700 active:bg-orange-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          className="bg-[var(--theme-primary)] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-700 active:bg-orange-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                           aria-label={`Pedir ${item.name}`}
                         >
                           {ordering === item.id ? (
@@ -523,7 +564,7 @@ export default function ClientMenu({ tableNumber, bill, onOrder, onBack, formatP
                       aria-label={`Ir al slide ${index + 1}`}
                       className={`w-2 h-2 rounded-full transition-all duration-300 ${
                         index === currentSlide
-                          ? 'bg-orange-600 w-6'
+                          ? 'bg-[var(--theme-primary)] w-6'
                           : 'bg-gray-300 hover:bg-gray-400'
                       }`}
                     />

@@ -18,6 +18,9 @@ const sessionRoutes = require('./routes/sessionRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const promotionRoutes = require('./routes/promotionRoutes');
+const themeRoutes = require('./routes/themeRoutes');
+const previewRoutes = require('./routes/previewRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 // Importar middleware de autenticaci\u00f3n
 const { verifyToken } = require('./middleware/auth');
@@ -82,6 +85,7 @@ app.get('/', (req, res) => {
       requests: '/api/requests',
       sessions: '/api/sessions',
       menu: '/api/menu',
+      theme: '/api/theme',
       orders: '/api/orders',
       promotions: '/api/promotions',
       bill: '/api/bill'
@@ -97,6 +101,9 @@ app.use('/api/tables', verifyToken, tableRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/menu', menuRoutes);
+app.use('/api/theme', themeRoutes);
+app.use('/preview', previewRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/promotions', promotionRoutes);
 

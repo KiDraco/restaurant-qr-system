@@ -111,6 +111,13 @@ async function initializeDatabase() {
       // Column may already exist
     }
 
+    // Nuevo: tabla themes (plantillas/teemas del menú público)
+    try {
+      require('../scripts/migrate-themes');
+    } catch (e) {
+      // Script puede haber fallado o ya estar corriendo; no bloquea
+    }
+
     console.log('✅ Tablas inicializadas correctamente');
   } catch (error) {
     console.error('❌ Error inicializando tablas:', error);
