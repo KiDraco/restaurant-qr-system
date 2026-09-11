@@ -113,7 +113,7 @@ async function initializeDatabase() {
 
     // Nuevo: tabla themes (plantillas/teemas del menú público)
     try {
-      require('../scripts/migrate-themes');
+      require('../../scripts/migrate-themes');
     } catch (e) {
       // Script puede haber fallado o ya estar corriendo; no bloquea
     }
