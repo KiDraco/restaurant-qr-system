@@ -1,6 +1,9 @@
 const MenuItem = require('../models/MenuItem');
 const ExcelParser = require('../services/excelParser');
-const { parsePdfBuffer } = require('../services/pdfParser');
+// Y-coordinate pdfjs-dist parser: matches items and prices by visual row,
+// which the text-only pdf-parse block order cannot do reliably for the
+// multi-column LACADÉ menu. Contract: async ({ rows, warnings, details }).
+const { parsePdfBuffer } = require('../services/pdfParserJsDist');
 
 // Decoded file-size cap for PDF menu imports (~5MB).
 const PDF_IMPORT_MAX_BYTES = 5 * 1024 * 1024;
