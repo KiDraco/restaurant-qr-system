@@ -9,7 +9,7 @@ function ThemeList({ onEditTheme }) {
   useEffect(() => {
     async function fetchThemes() {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/theme`, {
+        const res = await fetch('/api/theme', {
           credentials: 'include',
         });
         if (!res.ok) throw new Error('Network error');
@@ -26,12 +26,12 @@ function ThemeList({ onEditTheme }) {
 
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/theme/${id}`, {
+      const res = await fetch(`/api/theme/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to delete');
-      const r = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/theme`, { credentials: 'include' });
+      const r = await fetch('/api/theme', { credentials: 'include' });
       if (r.ok) setThemes(await r.json());
       setDeleteId(null);
     } catch (err) {

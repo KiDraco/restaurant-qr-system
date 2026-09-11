@@ -115,9 +115,7 @@ function ThemeEditor({ themeId, onBack }) {
     e.preventDefault();
     setSaving(true);
     try {
-      const url = themeId
-        ? `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/theme/${themeId}`
-        : `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/theme`;
+      const url = themeId ? `/api/theme/${themeId}` : '/api/theme';
       const method = themeId ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
