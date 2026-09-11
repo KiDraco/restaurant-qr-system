@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Bell, Users, UtensilsCrossed, BarChart3, Gift } from 'lucide-react';
+import { LayoutDashboard, Bell, Users, UtensilsCrossed, BarChart3, Gift, Palette } from 'lucide-react';
 import Dashboard from './components/admin/Dashboard';
 import PendingRequests from './components/admin/PendingRequests';
 import TableStatus from './components/admin/TableStatus';
 import MenuManager from './components/admin/MenuManager';
 import PromotionManager from './components/admin/PromotionManager';
 import Statistics from './components/admin/Statistics';
+import ThemesManager from './components/admin/ThemesManager';
 import AuthGuard from './components/admin/AuthGuard';
 
 function AdminApp() {
@@ -17,6 +18,7 @@ function AdminApp() {
     { id: 'tables', label: 'Mesas', icon: Users, component: TableStatus },
     { id: 'menu', label: 'Menú', icon: UtensilsCrossed, component: MenuManager },
     { id: 'promotions', label: 'Promociones', icon: Gift, component: PromotionManager },
+    { id: 'themes', label: 'Temas', icon: Palette, component: ThemesManager },
     { id: 'stats', label: 'Estadísticas', icon: BarChart3, component: Statistics }
   ];
 
