@@ -113,19 +113,17 @@ async function initializeDatabase() {
 
     // Migración: tabla themes (plantillas/teemas del menú público)
     try {
-      await db.execute({
-        sql: `CREATE TABLE IF NOT EXISTS themes (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          is_active BOOLEAN DEFAULT 0,
-          is_default BOOLEAN DEFAULT 0,
-          config TEXT NOT NULL DEFAULT '{}',
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`
-      });
-      try { await db.execute({ sql: 'CREATE INDEX IF NOT EXISTS idx_themes_name_lower ON themes (lower(name))' }); } catch (_) {}
-      const existing = await db.execute({ sql: 'SELECT COUNT(*) AS count FROM themes' });
+      await db.execute(`CREATE TABLE IF NOT EXISTS themes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT 0,
+        is_default BOOLEAN DEFAULT 0,
+        config TEXT NOT NULL DEFAULT '{}',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      try { await db.execute('CREATE INDEX IF NOT EXISTS idx_themes_name_lower ON themes (lower(name))'); } catch (_) {}
+      const existing = await db.execute('SELECT COUNT(*) AS count FROM themes');
       if (Number(existing.rows[0].count) === 0) {
         await db.execute({
           sql: `INSERT INTO themes (name, config, is_default, is_active) VALUES (?, ?, 1, 1)`,
