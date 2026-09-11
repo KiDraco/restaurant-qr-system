@@ -15,10 +15,11 @@ class ThemeController {
       const theme = await Theme.findActive();
       if (!theme) {
         // Fallback al default (puede que no haya ninguno activado todavía)
-        const defaultTheme = await Theme.getConfig(0) || { colors: { primary: '#FF6B6B', secondary: '#4ECDC4', background: '#FFFFFF', text: '#2A2A2A' }, font_family: 'system' };
+        const defaultTheme = { colors: { primary: '#FF6B6B', secondary: '#4ECDC4', background: '#FFFFFF', text: '#2A2A2A' }, font_family: 'system' };
         return res.json(defaultTheme);
       }
-      res.json(Theme.getConfig(theme.id));
+      const config = theme.config ? JSON.parse(theme.config) : {};
+      res.json(config);
     } catch (error) {
       next(error);
     }
