@@ -5,7 +5,7 @@ import BillDetail from './components/client/BillDetail';
 import ClientMenu from './components/client/ClientMenu';
 import Notification from './components/client/Notification';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const API_URL = '/api';
 
 function App() {
   const [scanned, setScanned] = useState(false);

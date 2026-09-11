@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const API_URL = '/api';
 
 /**
  * Hook para consumir el theme activo desde el backend.

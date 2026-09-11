@@ -4,7 +4,7 @@ import {
   Check, Search, Star, X, Loader2
 } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const API_URL = '/api';
 
 function ItemSkeleton() {
   return (
