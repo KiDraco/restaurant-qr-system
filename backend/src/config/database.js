@@ -119,7 +119,7 @@ async function initializeDatabase() {
           name TEXT NOT NULL,
           is_active BOOLEAN DEFAULT 0,
           is_default BOOLEAN DEFAULT 0,
-          config JSON NOT NULL DEFAULT '{"logo_url":null,"colors":null,"font_family":null,"background_type":"color","background_value":null}',
+          config TEXT NOT NULL DEFAULT '{}',
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`
@@ -128,10 +128,11 @@ async function initializeDatabase() {
       const existing = await db.execute({ sql: 'SELECT COUNT(*) AS count FROM themes' });
       if (Number(existing.rows[0].count) === 0) {
         await db.execute({
-          sql: `INSERT INTO themes (name, config, is_default, is_active) VALUES ('Default', '{"logo_url":null,"colors":null,"font_family":"system","background_type":"color","background_value":"#FFFFFF"}', 1, 1)`
+          sql: `INSERT INTO themes (name, config, is_default, is_active) VALUES (?, ?, 1, 1)`,
+          args: ['Default', JSON.stringify({ logo_url: null, colors: { primary: '#FF6B6B', secondary: '#4ECDC4', background: '#FFFFFF', text: '#2A2A2A' }, font_family: 'system', background_type: 'color', background_value: '#FFFFFF' })]
         });
       }
-    } catch (e) { /* no bloquea */ }
+    } catch (e) { console.error('⚠️ Migración themes falló:', e.message || e); }
 
     console.log('✅ Tablas inicializadas correctamente');
   } catch (error) {
