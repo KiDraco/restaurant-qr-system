@@ -16,10 +16,10 @@ class ThemeController {
       if (!theme) {
         // Fallback al default (puede que no haya ninguno activado todavía)
         const defaultTheme = { colors: { primary: '#FF6B6B', secondary: '#4ECDC4', background: '#FFFFFF', text: '#2A2A2A' }, font_family: 'system' };
-        return res.json(defaultTheme);
+        return res.json({ config: defaultTheme });
       }
       const config = theme.config ? JSON.parse(theme.config) : {};
-      res.json(config);
+      res.json({ config });
     } catch (error) {
       next(error);
     }
