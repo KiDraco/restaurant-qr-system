@@ -111,12 +111,27 @@ async function initializeDatabase() {
       // Column may already exist
     }
 
-    // Nuevo: tabla themes (plantillas/teemas del menú público)
+    // Migración: tabla themes (plantillas/teemas del menú público)
     try {
-      require('../../scripts/migrate-themes');
-    } catch (e) {
-      // Script puede haber fallado o ya estar corriendo; no bloquea
-    }
+      await db.execute({
+        sql: `CREATE TABLE IF NOT EXISTS themes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          is_active BOOLEAN DEFAULT 0,
+          is_default BOOLEAN DEFAULT 0,
+          config JSON NOT NULL DEFAULT '{"logo_url":null,"colors":null,"font_family":null,"background_type":"color","background_value":null}',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`
+      });
+      try { await db.execute({ sql: 'CREATE INDEX IF NOT EXISTS idx_themes_name_lower ON themes (lower(name))' }); } catch (_) {}
+      const existing = await db.execute({ sql: 'SELECT COUNT(*) AS count FROM themes' });
+      if (Number(existing.rows[0].count) === 0) {
+        await db.execute({
+          sql: `INSERT INTO themes (name, config, is_default, is_active) VALUES ('Default', '{"logo_url":null,"colors":null,"font_family":"system","background_type":"color","background_value":"#FFFFFF"}', 1, 1)`
+        });
+      }
+    } catch (e) { /* no bloquea */ }
 
     console.log('✅ Tablas inicializadas correctamente');
   } catch (error) {
