@@ -14,8 +14,6 @@
 //   parsePdfBuffer(buffer) -> Promise<{ rows, warnings, details }>
 //   rows: [{ name, description, price, category }]
 
-const pdfjs = require('pdfjs-dist/legacy/build/pdf.mjs');
-
 // Canonical menu categories: spaceless-normalized header -> display label.
 const CATEGORIES = [
   { key: 'ENTRADAS', label: 'Entradas' },
@@ -361,7 +359,20 @@ function parsePageRows(rows) {
 // ── Public API ──
 
 // PDF buffer -> { rows, warnings, details }. Throws on unreadable PDFs.
+//
+// pdfjs-dist is loaded lazily via dynamic import() (NOT a top-level require):
+// its entry point is ESM (.mjs) and a top-level require would crash the
+// whole API module at boot on runtimes where require(ESM) is unsupported
+// (e.g. older Netlify/Lambda Node). Dynamic import works everywhere and
+// keeps login/other endpoints unaffected even if pdfjs-dist fails.
 async function parsePdfBuffer(buffer) {
+  let pdfjs;
+  try {
+    pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  } catch (err) {
+    throw new Error('No se pudo cargar el extractor de PDF (pdfjs-dist): ' + err.message);
+  }
+
   // pdfjs rejects Buffer (even though Buffer extends Uint8Array) and requires a
   // plain Uint8Array; copying always is the safe path for both buffer types.
   const pdfData = new Uint8Array(buffer);
