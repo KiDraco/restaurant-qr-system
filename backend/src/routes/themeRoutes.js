@@ -10,6 +10,9 @@ router.get('/', verifyToken, requireRole('admin'), themeController.listAll);
 // GET /api/themes/active - Obtener theme activo (público, sin auth)
 router.get('/active', themeController.getActive);
 
+// GET /api/themes/:id - Obtener theme por id (admin)
+router.get('/:id', verifyToken, requireRole('admin'), themeController.getById);
+
 // POST /api/themes - Crear theme (admin)
 router.post('/', verifyToken, requireRole('admin'), validate(themeCreateSchema), themeController.create);
 

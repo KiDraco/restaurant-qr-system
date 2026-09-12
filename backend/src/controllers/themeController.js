@@ -32,6 +32,23 @@ class ThemeController {
     }
   }
 
+  async getById(req, res, next) {
+    try {
+      const { id } = req.params;
+      const theme = await Theme.findById(id);
+      if (!theme) {
+        return res.status(404).json({ error: 'Theme no encontrado' });
+      }
+      res.json({
+        ...theme,
+        canvas_json: theme.canvas_json ? JSON.parse(theme.canvas_json) : null,
+        background_config: theme.background_config ? JSON.parse(theme.background_config) : null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async create(req, res, next) {
     try {
       const { name, config, canvas_json, page_format, background_config } = req.body;
