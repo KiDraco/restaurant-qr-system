@@ -12,7 +12,7 @@
     "react-router-dom": "^6.20.0",
     "react-scripts": "^5.0.1"
   },
-"scripts": {
+  "scripts": {
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",

@@ -170,7 +170,7 @@ export function useCanvas() {
       });
       
       return updated;
-    });
+    }));
   }, []);
 
   const deleteElement = useCallback((id) => {

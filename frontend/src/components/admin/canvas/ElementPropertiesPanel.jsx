@@ -283,7 +283,7 @@ export function ElementPropertiesPanel({
           options={Object.keys(PAGE_DIMENSIONS)}
           optionLabel={formatOptionLabel}
           onChange={handlePageFormatChange}
-        )
+        />
         
         <SectionTitle title="Fondo" />
         <SelectInput
@@ -292,7 +292,7 @@ export function ElementPropertiesPanel({
           options={BACKGROUND_TYPES}
           optionLabel={BACKGROUND_TYPE_LABELS}
           onChange={handleBgTypeChange}
-        )
+        />
         
         {(canvasConfig.background_config?.type || 'color') === 'color' && (
           <ColorInput
@@ -353,11 +353,6 @@ export function ElementPropertiesPanel({
       }
     });
   }
-
-  const handleConfigChange = (key, value) => {
-    if (!selectedElement) return;
-    onUpdateElement(selectedId, { config: { ...selectedElement.config, [key]: value } });
-  };
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-6">
