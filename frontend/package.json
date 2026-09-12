@@ -12,15 +12,16 @@
     "react-router-dom": "^6.20.0",
     "react-scripts": "^5.0.1"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "set SKIP_PREFLIGHT_CHECK=true && react-scripts build",
-    "test": "react-scripts test",
+"scripts": {
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
     "eject": "react-scripts eject"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@babel/preset-react": "^7.24.0",
+    "@craco/craco": "^7.1.0",
     "autoprefixer": "^10.4.27",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react-hooks": "^7.1.1",

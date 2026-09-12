@@ -134,7 +134,7 @@ function ColorInput({ label, value, onChange, showOpacity = true }) {
             className="flex-1 px-3 py-2 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-200 rounded-lg focus:ring-2 focus:ring-opacity-20 outline-none transition-colors font-mono text-sm"
             placeholder="#RRGGBB"
           />
-          {showOpacity ? (
+          {showOpacity && (
             <React.Fragment>
               <input
                 type="range"
@@ -147,7 +147,7 @@ function ColorInput({ label, value, onChange, showOpacity = true }) {
               />
               <span className="text-xs text-gray-500 w-8 text-right">{Math.round(opacity * 100)}%</span>
             </React.Fragment>
-          ) : null}
+          )}
         </div>
       </div>
     </div>
@@ -252,6 +252,25 @@ export function ElementPropertiesPanel({
     return null;
   };
 
+  // Canvas-level settings helpers (avoid spread in arrow functions for parser compatibility)
+  function makeBgConfig(base, updates) {
+    return { ...base, ...updates };
+  }
+  const handlePageFormatChange = function(v) { onUpdateCanvasConfig({ page_format: v }); };
+  const handleBgTypeChange = function(v) { onUpdateCanvasConfig({ background_config: makeBgConfig(canvasConfig.background_config, { type: v }) }); };
+  const handleColorBgChange = function(v) { onUpdateCanvasConfig({ background_config: makeBgConfig(canvasConfig.background_config, { type: 'color', value: v.hex }) }); };
+  const handleGradientFromChange = function(v) { 
+    var base = canvasConfig.background_config.value || {};
+    onUpdateCanvasConfig({ background_config: makeBgConfig(canvasConfig.background_config, { type: 'gradient', value: makeBgConfig(base, { from: v.hex }) }) }); 
+  };
+  const handleGradientToChange = function(v) { 
+    var base = canvasConfig.background_config.value || {};
+    onUpdateCanvasConfig({ background_config: makeBgConfig(canvasConfig.background_config, { type: 'gradient', value: makeBgConfig(base, { to: v.hex }) }) }); 
+  };
+  const handleGridToggle = function(v) { onUpdateCanvasConfig({ grid: makeBgConfig(canvasConfig.grid, { enabled: v }) }); };
+  const handleGridSizeChange = function(v) { onUpdateCanvasConfig({ grid: makeBgConfig(canvasConfig.grid, { size: v }) }); };
+  const formatOptionLabel = function(f) { return f.replace('-', ' '); };
+
   if (!selectedId) {
     return (
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -262,53 +281,53 @@ export function ElementPropertiesPanel({
           label="Formato"
           value={canvasConfig.page_format || 'A4-portrait'}
           options={Object.keys(PAGE_DIMENSIONS)}
-          optionLabel={(f) => f.replace('-', ' ')}
-          onChange={(v) => onUpdateCanvasConfig({ page_format: v })}
+          optionLabel={formatOptionLabel}
+          onChange={handlePageFormatChange}
         )
-
+        
         <SectionTitle title="Fondo" />
         <SelectInput
           label="Tipo de fondo"
           value={canvasConfig.background_config?.type || 'color'}
           options={BACKGROUND_TYPES}
           optionLabel={BACKGROUND_TYPE_LABELS}
-          onChange={(v) => onUpdateCanvasConfig({ background_config: { ...canvasConfig.background_config, type: v } })}
+          onChange={handleBgTypeChange}
         )
         
         {(canvasConfig.background_config?.type || 'color') === 'color' && (
           <ColorInput
             label="Color de fondo"
             value={canvasConfig.background_config?.value || '#FFFFFF'}
-            onChange={(v) => onUpdateCanvasConfig({ background_config: { ...canvasConfig.background_config, type: 'color', value: v.hex } })}
+            onChange={handleColorBgChange}
           />
         )}
         
         {(canvasConfig.background_config?.type || 'color') === 'gradient' && (
-          <>
+          <React.Fragment>
             <ColorInput
               label="Color inicial"
               value={canvasConfig.background_config?.value?.from || '#FF6B6B'}
-              onChange={(v) => onUpdateCanvasConfig({ background_config: { ...canvasConfig.background_config, type: 'gradient', value: { ...canvasConfig.background_config.value, from: v.hex } } })}
+              onChange={handleGradientFromChange}
             />
             <ColorInput
               label="Color final"
               value={canvasConfig.background_config?.value?.to || '#4ECDC4'}
-              onChange={(v) => onUpdateCanvasConfig({ background_config: { ...canvasConfig.background_config, type: 'gradient', value: { ...canvasConfig.background_config.value, to: v.hex } } })}
+              onChange={handleGradientToChange}
             />
-          </>
-        }
-
+          </React.Fragment>
+        )}
+        
         <SectionTitle title="Cuadrícula" />
         <ToggleInput
           label="Mostrar cuadrícula"
           value={canvasConfig.grid?.enabled ?? true}
-          onChange={(v) => onUpdateCanvasConfig({ grid: { ...canvasConfig.grid, enabled: v } })}
+          onChange={handleGridToggle}
           description="Muestra una cuadrícula de 8px para alinear elementos"
         />
         <NumberInput
           label="Tamaño de cuadrícula"
           value={canvasConfig.grid?.size || 8}
-          onChange={(v) => onUpdateCanvasConfig({ grid: { ...canvasConfig.grid, size: v } })}
+          onChange={handleGridSizeChange}
           min={4}
           max={64}
           step={4}
@@ -334,6 +353,11 @@ export function ElementPropertiesPanel({
       }
     });
   }
+
+  const handleConfigChange = (key, value) => {
+    if (!selectedElement) return;
+    onUpdateElement(selectedId, { config: { ...selectedElement.config, [key]: value } });
+  };
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -410,89 +434,93 @@ export function ElementPropertiesPanel({
 
       <SectionTitle title="Configuración del elemento" />
       
-      {selectedElement.type === 'image' && (
+      {type === 'image' && (
         <>
           <FileInput
             label="Imagen"
             value={config.src}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, src: v } })}
+            onChange={(v) => handleConfigChange('src', v)}
             accept="image/*"
             preview={true}
+            error={errors.src}
           />
           <TextInput
             label="Texto alternativo"
             value={config.alt || ''}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, alt: v } })}
+            onChange={(v) => handleConfigChange('alt', v)}
             placeholder="Descripción para accesibilidad"
           />
           <NumberInput
             label="Radio de borde"
             value={config.borderRadius || 0}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, borderRadius: v } })}
+            onChange={(v) => handleConfigChange('borderRadius', v)}
             min={0}
             max={100}
+            error={errors.borderRadius}
           />
           <NumberInput
             label="Opacidad"
             value={config.opacity ?? 1}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, opacity: v } })}
+            onChange={(v) => handleConfigChange('opacity', v)}
             min={0}
             max={1}
             step={0.01}
             unit=""
+            error={errors.opacity}
           />
           <SelectInput
             label="Ajuste"
             value={config.objectFit || 'cover'}
             options={OBJECT_FITS}
             optionLabel={OBJECT_FIT_LABELS}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, objectFit: v } })}
+            onChange={(v) => handleConfigChange('objectFit', v)}
           />
         </>
       )}
 
-      {selectedElement.type === 'text' && (
+      {type === 'text' && (
         <>
           <TextInput
             label="Contenido"
             value={config.content || ''}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, content: v } })}
+            onChange={(v) => handleConfigChange('content', v)}
             placeholder="Escribe tu texto..."
           />
           <SelectInput
             label="Fuente"
             value={config.fontFamily || 'system-ui'}
             options={FONT_FAMILIES}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, fontFamily: v } })}
+            onChange={(v) => handleConfigChange('fontFamily', v)}
           />
           <NumberInput
             label="Tamaño"
             value={config.fontSize || 16}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, fontSize: v } })}
+            onChange={(v) => handleConfigChange('fontSize', v)}
             min={8}
             max={200}
+            error={errors.fontSize}
           />
           <SelectInput
             label="Peso"
             value={config.fontWeight || 'normal'}
             options={FONT_WEIGHTS}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, fontWeight: v } })}
+            onChange={(v) => handleConfigChange('fontWeight', v)}
           />
           <ColorInput
             label="Color"
             value={{ hex: config.color || '#2A2A2A', opacity: 1 }}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, color: v.hex } })}
+            onChange={(v) => handleConfigChange('color', v.hex)}
           />
           <SelectInput
             label="Alineación"
             value={config.textAlign || 'left'}
             options={TEXT_ALIGNMENTS}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, textAlign: v } })}
+            onChange={(v) => handleConfigChange('textAlign', v)}
           />
           <NumberInput
             label="Interlineado"
             value={config.lineHeight || 1.5}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, lineHeight: v } })}
+            onChange={(v) => handleConfigChange('lineHeight', v)}
             min={0.5}
             max={3}
             step={0.1}
@@ -501,23 +529,23 @@ export function ElementPropertiesPanel({
         </>
       )}
 
-      {selectedElement.type === 'category' && (
+      {type === 'category' && (
         <>
           <TextInput
             label="Título"
             value={config.title || ''}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, title: v } })}
+            onChange={(v) => handleConfigChange('title', v)}
           />
           <SelectInput
             label="Fuente"
             value={config.fontFamily || 'system-ui'}
             options={FONT_FAMILIES}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, fontFamily: v } })}
+            onChange={(v) => handleConfigChange('fontFamily', v)}
           />
           <NumberInput
             label="Tamaño"
             value={config.fontSize || 20}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, fontSize: v } })}
+            onChange={(v) => handleConfigChange('fontSize', v)}
             min={10}
             max={100}
           />
@@ -525,29 +553,29 @@ export function ElementPropertiesPanel({
             label="Peso"
             value={config.fontWeight || 'bold'}
             options={FONT_WEIGHTS}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, fontWeight: v } })}
+            onChange={(v) => handleConfigChange('fontWeight', v)}
           />
           <ColorInput
             label="Color"
             value={{ hex: config.color || '#2A2A2A', opacity: 1 }}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, color: v.hex } })}
+            onChange={(v) => handleConfigChange('color', v.hex)}
           />
           <ToggleInput
             label="Mostrar separador"
             value={config.separator !== false}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, separator: v } })}
+            onChange={(v) => handleConfigChange('separator', v)}
           />
           {config.separator !== false && (
             <>
               <ColorInput
                 label="Color separador"
                 value={{ hex: config.separatorColor || '#FF6B6B', opacity: 1 }}
-                onChange={(v) => onUpdateElement(selectedId, { config: { ...config, separatorColor: v.hex } })}
+                onChange={(v) => handleConfigChange('separatorColor', v.hex)}
               />
               <NumberInput
                 label="Grosor"
                 value={config.separatorWidth || 2}
-                onChange={(v) => onUpdateElement(selectedId, { config: { ...config, separatorWidth: v } })}
+                onChange={(v) => handleConfigChange('separatorWidth', v)}
                 min={1}
                 max={10}
               />
@@ -556,30 +584,30 @@ export function ElementPropertiesPanel({
                 value={config.separatorStyle || 'solid'}
                 options={LINE_STYLES}
                 optionLabel={LINE_STYLE_LABELS}
-                onChange={(v) => onUpdateElement(selectedId, { config: { ...config, separatorStyle: v } })}
+                onChange={(v) => handleConfigChange('separatorStyle', v)}
               />
             </>
           )}
         </>
       )}
 
-      {selectedElement.type === 'product' && (
+      {type === 'product' && (
         <>
           <TextInput
             label="Nombre"
             value={config.name || ''}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, name: v } })}
+            onChange={(v) => handleConfigChange('name', v)}
           />
           <TextInput
             label="Descripción"
             value={config.description || ''}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, description: v } })}
+            onChange={(v) => handleConfigChange('description', v)}
             placeholder="Opcional"
           />
           <TextInput
             label="Precio"
             value={config.price || '$0.00'}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, price: v } })}
+            onChange={(v) => handleConfigChange('price', v)}
             placeholder="$0.00"
           />
           <div className="grid grid-cols-2 gap-3 mb-4">
@@ -588,12 +616,12 @@ export function ElementPropertiesPanel({
               value={config.layout || 'horizontal'}
               options={['horizontal', 'vertical']}
               optionLabel={(l) => l === 'horizontal' ? 'Horizontal' : 'Vertical'}
-              onChange={(v) => onUpdateElement(selectedId, { config: { ...config, layout: v } })}
+              onChange={(v) => handleConfigChange('layout', v)}
             />
             <NumberInput
               label="Espaciado"
               value={config.spacing || 16}
-              onChange={(v) => onUpdateElement(selectedId, { config: { ...config, spacing: v } })}
+              onChange={(v) => handleConfigChange('spacing', v)}
               min={0}
               max={50}
             />
@@ -601,22 +629,22 @@ export function ElementPropertiesPanel({
           <ToggleInput
             label="Mostrar precio"
             value={config.showPrice !== false}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, showPrice: v } })}
+            onChange={(v) => handleConfigChange('showPrice', v)}
           />
         </>
       )}
 
-      {selectedElement.type === 'separator' && (
+      {type === 'separator' && (
         <>
           <ColorInput
             label="Color"
             value={{ hex: config.color || '#FF6B6B', opacity: 1 }}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, color: v.hex } })}
+            onChange={(v) => handleConfigChange('color', v.hex)}
           />
           <NumberInput
             label="Grosor"
             value={config.width || 2}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, width: v } })}
+            onChange={(v) => handleConfigChange('width', v)}
             min={1}
             max={10}
           />
@@ -625,12 +653,12 @@ export function ElementPropertiesPanel({
             value={config.style || 'solid'}
             options={LINE_STYLES}
             optionLabel={LINE_STYLE_LABELS}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, style: v } })}
+            onChange={(v) => handleConfigChange('style', v)}
           />
           <NumberInput
             label="Longitud (%)"
             value={parseFloat(config.length) || 100}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, length: v + '%' } })}
+            onChange={(v) => handleConfigChange('length', v + '%')}
             min={10}
             max={100}
             unit="%"
@@ -638,20 +666,20 @@ export function ElementPropertiesPanel({
         </>
       )}
 
-      {selectedElement.type === 'decorative' && (
+      {type === 'decorative' && (
         <>
           <SelectInput
             label="Tipo"
             value={config.kind || 'divider-icon'}
             options={DECORATIVE_KINDS}
             optionLabel={DECORATIVE_KIND_LABELS}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, kind: v } })}
+            onChange={(v) => handleConfigChange('kind', v)}
           />
           {(config.kind === 'custom-svg') && (
             <FileInput
               label="SVG personalizado"
               value={config.src}
-              onChange={(v) => onUpdateElement(selectedId, { config: { ...config, src: v } })}
+              onChange={(v) => handleConfigChange('src', v)}
               accept="image/svg+xml"
               preview={true}
             />
@@ -659,26 +687,26 @@ export function ElementPropertiesPanel({
           <ColorInput
             label="Color"
             value={{ hex: config.color || '#FF6B6B', opacity: 1 }}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, color: v.hex } })}
+            onChange={(v) => handleConfigChange('color', v.hex)}
           />
           <NumberInput
             label="Ancho"
             value={config.width || 48}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, width: v } })}
+            onChange={(v) => handleConfigChange('width', v)}
             min={16}
             max={200}
           />
           <NumberInput
             label="Alto"
             value={config.height || 48}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, height: v } })}
+            onChange={(v) => handleConfigChange('height', v)}
             min={16}
             max={200}
           />
           <NumberInput
             label="Rotación"
             value={config.rotation || 0}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, rotation: v } })}
+            onChange={(v) => handleConfigChange('rotation', v)}
             min={0}
             max={360}
             step={1}
@@ -687,32 +715,32 @@ export function ElementPropertiesPanel({
         </>
       )}
 
-      {selectedElement.type === 'logo' && (
+      {type === 'logo' && (
         <>
           <FileInput
             label="Logo"
             value={config.src}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, src: v } })}
+            onChange={(v) => handleConfigChange('src', v)}
             accept="image/*"
             preview={true}
           />
           <TextInput
             label="Texto alternativo"
             value={config.alt || ''}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, alt: v } })}
+            onChange={(v) => handleConfigChange('alt', v)}
             placeholder="Nombre del restaurante"
           />
           <NumberInput
             label="Radio de borde"
             value={config.borderRadius || 0}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, borderRadius: v } })}
+            onChange={(v) => handleConfigChange('borderRadius', v)}
             min={0}
             max={100}
           />
           <NumberInput
             label="Opacidad"
             value={config.opacity ?? 1}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, opacity: v } })}
+            onChange={(v) => handleConfigChange('opacity', v)}
             min={0}
             max={1}
             step={0.01}
@@ -721,7 +749,7 @@ export function ElementPropertiesPanel({
           <TextInput
             label="URL de enlace (opcional)"
             value={config.linkUrl || ''}
-            onChange={(v) => onUpdateElement(selectedId, { config: { ...config, linkUrl: v } })}
+            onChange={(v) => handleConfigChange('linkUrl', v)}
             placeholder="https://..."
           />
         </>
