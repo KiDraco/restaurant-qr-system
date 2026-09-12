@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Bell, Users, UtensilsCrossed, BarChart3, Gift, Palette } from 'lucide-react';
-import Dashboard from './components/admin/Dashboard';
-import PendingRequests from './components/admin/PendingRequests';
-import TableStatus from './components/admin/TableStatus';
-import MenuManager from './components/admin/MenuManager';
-import PromotionManager from './components/admin/PromotionManager';
-import Statistics from './components/admin/Statistics';
-import ThemesManager from './components/admin/ThemesManager';
-import CanvasEditor from './pages/admin/CanvasEditor';
 import AuthGuard from './components/admin/AuthGuard';
 
 function AdminApp() {
@@ -78,28 +70,7 @@ function AdminApp() {
 
         {/* Main Content */}
         <div className="ml-64">
-          {isCanvasRoute ? (
-            // Canvas Editor routes
-            <Routes>
-              <Route path="/admin/themes/new" element={<CanvasEditor />} />
-              <Route path="/admin/themes/:id/edit" element={<CanvasEditor />} />
-            </Routes>
-          ) : (
-            // Tab-based content
-            <div className="p-6">
-              <Routes>
-                <Route path="/admin" element={<Dashboard />} />
-                <Route path="/admin/dashboard" element={<Dashboard />} />
-                <Route path="/admin/requests" element={<PendingRequests />} />
-                <Route path="/admin/tables" element={<TableStatus />} />
-                <Route path="/admin/menu" element={<MenuManager />} />
-                <Route path="/admin/promotions" element={<PromotionManager />} />
-                <Route path="/admin/themes" element={<ThemesManager />} />
-                <Route path="/admin/stats" element={<Statistics />} />
-                <Route index element={<Dashboard />} />
-              </Routes>
-            </div>
-          )}
+          <Outlet />
         </div>
       </div>
     </AuthGuard>
