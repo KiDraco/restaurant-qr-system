@@ -3,7 +3,8 @@
 
 const FEATURE_FLAGS = {
   // Canvas-based theme editor (v2)
-  CANVAS_THEMES: process.env.REACT_APP_FEATURE_CANVAS_THEMES === 'true',
+  // Opt-out: enabled by default, disable explicitly with REACT_APP_FEATURE_CANVAS_THEMES=false
+  CANVAS_THEMES: process.env.REACT_APP_FEATURE_CANVAS_THEMES !== 'false',
 };
 
 export function isFeatureEnabled(flag) {

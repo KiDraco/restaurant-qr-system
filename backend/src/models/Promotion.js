@@ -11,14 +11,16 @@ class Promotion {
 
   static async getAll() {
     const result = await db.execute({
-      sql: 'SELECT * FROM promotions ORDER BY created_at DESC'
+      sql: 'SELECT * FROM promotions ORDER BY created_at DESC',
+      args: []
     });
     return result.rows;
   }
 
   static async getActive() {
     const result = await db.execute({
-      sql: "SELECT * FROM promotions WHERE active = 1 AND (end_date IS NULL OR end_date >= date('now')) ORDER BY created_at DESC"
+      sql: "SELECT * FROM promotions WHERE active = 1 AND (end_date IS NULL OR end_date >= date('now')) ORDER BY created_at DESC",
+      args: []
     });
     return result.rows;
   }
