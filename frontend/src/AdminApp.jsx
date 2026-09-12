@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Bell, Users, UtensilsCrossed, BarChart3, Gift, Palette } from 'lucide-react';
 import Dashboard from './components/admin/Dashboard';
@@ -30,6 +30,19 @@ function AdminApp() {
   const isCanvasRoute = location.pathname.startsWith('/admin/themes/') && 
     (location.pathname.endsWith('/edit') || location.pathname.endsWith('/new'));
 
+  // Keep activeTab in sync with the URL so direct loads and back/forward work
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/admin' || path === '/admin/dashboard') {
+      setActiveTab('dashboard');
+    } else if (path.startsWith('/admin/themes')) {
+      setActiveTab('themes');
+    } else {
+      const match = tabs.find(t => path === `/admin/${t.id}`);
+      if (match) setActiveTab(match.id);
+    }
+  }, [location.pathname]);
+
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gray-50">
@@ -46,10 +59,8 @@ function AdminApp() {
                 <button
                   key={tab.id}
                   onClick={() => {
-                    if (tab.id !== 'themes' || !isCanvasRoute) {
-                      setActiveTab(tab.id);
-                      navigate(`/admin`);
-                    }
+                    setActiveTab(tab.id);
+                    navigate(tab.id === 'dashboard' ? '/admin' : `/admin/${tab.id}`);
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
                     activeTab === tab.id && !isCanvasRoute
