@@ -1,0 +1,6 @@
+🚀 Servidor corriendo en http://localhost:3000
+📱 Frontend esperado en http://localhost:3001
+✅ Tablas inicializadas correctamente
+2026-09-11T17:14:35.144Z - GET /api/theme
+2026-09-11T17:14:46.606Z - GET /api/theme
+2026-09-11T17:24:35.647Z - GET /api/theme

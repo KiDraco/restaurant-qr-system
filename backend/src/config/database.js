@@ -119,6 +119,9 @@ async function initializeDatabase() {
         is_active BOOLEAN DEFAULT 0,
         is_default BOOLEAN DEFAULT 0,
         config TEXT NOT NULL DEFAULT '{}',
+        canvas_json TEXT DEFAULT NULL,
+        page_format TEXT DEFAULT 'A4-portrait',
+        background_config TEXT DEFAULT '{"type":"color","value":"#FFFFFF"}',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`);
@@ -131,6 +134,11 @@ async function initializeDatabase() {
         });
       }
     } catch (e) { console.error('⚠️ Migración themes falló:', e.message || e); }
+
+    // Migración: agregar campos de canvas a themes existentes
+    try { await db.execute('ALTER TABLE themes ADD COLUMN canvas_json TEXT DEFAULT NULL'); } catch (_) {}
+    try { await db.execute('ALTER TABLE themes ADD COLUMN page_format TEXT DEFAULT \'A4-portrait\''); } catch (_) {}
+    try { await db.execute('ALTER TABLE themes ADD COLUMN background_config TEXT DEFAULT \'{"type":"color","value":"#FFFFFF"}\''); } catch (_) {}
 
     console.log('✅ Tablas inicializadas correctamente');
   } catch (error) {

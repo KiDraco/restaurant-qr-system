@@ -319,6 +319,68 @@ class API {
     });
     return response.json();
   }
+
+  // Themes (admin CRUD with canvas support)
+  async getThemes() {
+    const response = await fetch(`${API_URL}/theme`, {
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
+    });
+    return response.json();
+  }
+
+  async getActiveTheme() {
+    const response = await fetch(`${API_URL}/theme/active`, {
+      credentials: 'include'
+    });
+    return response.json();
+  }
+
+  async getTheme(id) {
+    const response = await fetch(`${API_URL}/theme/${id}`, {
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
+    });
+    return response.json();
+  }
+
+  async createTheme(name, config, canvas_json, page_format, background_config) {
+    const response = await fetch(`${API_URL}/theme`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ name, config, canvas_json, page_format, background_config }),
+      credentials: 'include'
+    });
+    return response.json();
+  }
+
+  async updateTheme(id, data) {
+    const response = await fetch(`${API_URL}/theme/${id}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+      credentials: 'include'
+    });
+    return response.json();
+  }
+
+  async activateTheme(id) {
+    const response = await fetch(`${API_URL}/theme/${id}/activate`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
+    });
+    return response.json();
+  }
+
+  async deleteTheme(id) {
+    const response = await fetch(`${API_URL}/theme/${id}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+      credentials: 'include'
+    });
+    return response.json();
+  }
 }
 
 // eslint-disable-next-line import/no-anonymous-default-export

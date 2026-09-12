@@ -8,13 +8,13 @@ const API_URL = '/api';
  * - Inyección de CSS variables en `:root` (solo si hay theme)
  * - Carga dinámica de Google Fonts con preload y font-display: swap
  * - Fallback a defaults si el fetch falla o el theme está corrupto
- * - Debounce pequeño para evitar re-renders excesivos
+ * - Soporte para canvas_json (nuevo) y config legacy (fallback)
  */
 export function useTheme() {
   const [theme, setTheme] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const appliedRef = useRef(false); // asegurar que solo se injecta una vez
+  const appliedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,6 +29,7 @@ export function useTheme() {
         if (!res.ok) throw new Error('No se pudo obtener el theme');
         const data = await res.json();
         if (data && data.config) {
+          // Backend now returns merged config from canvas_json or legacy config
           setTheme(data.config);
         } else {
           throw new Error('Theme sin configuración');
@@ -41,7 +42,7 @@ export function useTheme() {
           colors: { primary: '#FF6B6B', secondary: '#4ECDC4', background: '#FFFFFF', text: '#2A2A2A' },
           font_family: 'system',
           background_type: 'color',
-          background_value: null,
+          background_value: '#FFFFFF',
         });
       } finally {
         if (!cancelled) setLoading(false);
@@ -50,13 +51,10 @@ export function useTheme() {
 
     fetchTheme();
 
-    // Cleanup: remover CSS vars y fonts si el componente se desmonta
     return () => {
       cancelled = true;
-      // No removemos vars aquí para que el theme persista mientras la página esté abierta;
-      // se limpiará al cerrar pestaña o navigation
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    };
+  }, []);
 
   // Efecto secundario: injectar CSS vars y cargar fonts SOLO cuándo el theme está listo
   useEffect(() => {
@@ -78,7 +76,6 @@ export function useTheme() {
 
     // 2. Cargar Google Fonts dinámicamente si el family no es "system"
     if (theme.font_family && theme.font_family !== 'system') {
-      // Remover link previo si existe
       const prev = document.getElementById('google-font-preload');
       if (prev) prev.remove();
 
@@ -91,29 +88,37 @@ export function useTheme() {
       link.crossOrigin = 'anonymous';
       document.head.appendChild(link);
 
-      // Injectar la regla CSS después de que el font cargue
       const style = document.createElement('style');
       style.textContent = `
         :root { font-family: '${theme.font_family}', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; }
       `;
       document.head.appendChild(style);
 
-      // Cuando el link se hace load, removemos el preload y añadimos la regla definitva
       link.addEventListener('load', () => {
-        // El style tag ya inyectó la familia; opcional: quitar el preload
-        // No lo removemos para que persista la sesión
+        // El style tag ya inyectó la familia
       });
     }
 
     // 3. Aplicar background según tipo
     if (theme.background_type === 'gradient' && theme.background_value) {
-      root.style.setProperty('--theme-gradient', theme.background_value);
+      // gradient value format: "from:#FF6B6B,to:#4ECDC4"
+      const parts = theme.background_value.split(',').reduce((acc, p) => {
+        const [k, v] = p.split(':');
+        acc[k.trim()] = v.trim();
+        return acc;
+      }, {});
+      root.style.setProperty('--theme-gradient', `linear-gradient(135deg, ${parts.from || '#FF6B6B'}, ${parts.to || '#4ECDC4'})`);
     } else if (theme.background_type === 'image' && theme.background_value) {
       root.style.setProperty('--theme-bg-image', `url('${theme.background_value}')`);
     } else if (theme.background_type === 'color' && theme.background_value) {
       root.style.setProperty('--theme-background', theme.background_value);
     }
-  }, [theme]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // 4. Logo URL if present
+    if (theme.logo_url) {
+      root.style.setProperty('--theme-logo', `url('${theme.logo_url}')`);
+    }
+  }, [theme]);
 
   return { theme, loading, error };
 }
