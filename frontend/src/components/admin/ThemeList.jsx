@@ -56,8 +56,10 @@ function ThemeList({ onEditTheme }) {
 
 const handleNewTheme = async () => {
   try {
-    const newTheme = await api.createTheme('Nuevo Theme', {}, null, 'A4-portrait', { type: 'color', value: '#FFFFFF' });
-    // Validar estructura de respuesta: el backend devuelve { message, theme: { id, ... } }
+    const newTheme = await api.createTheme('Nuevo Theme', {
+      background_type: 'color',
+      background_value: '#FFFFFF',
+    }, null, 'A4-portrait', { type: 'color', value: '#FFFFFF' });
     if (!newTheme || !newTheme.theme || !newTheme.theme.id) {
       throw new Error('Respuesta inesperada del servidor al crear theme');
     }

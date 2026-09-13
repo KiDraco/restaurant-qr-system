@@ -3,13 +3,13 @@ const { z } = require('zod');
 const themeConfigSchema = z.object({
   logo_url: z.string().url('URL de logo inválida').optional(),
   colors: z.object({
-    primary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color primary debe ser hex'),
-    secondary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color secondary debe ser hex'),
-    background: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color background debe ser hex'),
-    text: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color text debe ser hex'),
+    primary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color primary debe ser hex').optional(),
+    secondary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color secondary debe ser hex').optional(),
+    background: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color background debe ser hex').optional(),
+    text: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color text debe ser hex').optional(),
   }).optional(),
   font_family: z.string().optional(),
-  background_type: z.enum(['color', 'image', 'gradient']),
+  background_type: z.enum(['color', 'image', 'gradient']).optional(),
   background_value: z.string().optional(),
 });
 
