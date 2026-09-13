@@ -485,6 +485,7 @@ export function ElementPropertiesPanel({
             label="Fuente"
             value={config.fontFamily || 'system-ui'}
             options={FONT_FAMILIES}
+            optionLabel={opt => opt}
             onChange={(v) => handleConfigChange('fontFamily', v)}
           />
           <NumberInput
@@ -499,6 +500,7 @@ export function ElementPropertiesPanel({
             label="Peso"
             value={config.fontWeight || 'normal'}
             options={FONT_WEIGHTS}
+            optionLabel={opt => opt}
             onChange={(v) => handleConfigChange('fontWeight', v)}
           />
           <ColorInput
@@ -510,6 +512,7 @@ export function ElementPropertiesPanel({
             label="Alineación"
             value={config.textAlign || 'left'}
             options={TEXT_ALIGNMENTS}
+            optionLabel={opt => opt}
             onChange={(v) => handleConfigChange('textAlign', v)}
           />
           <NumberInput
@@ -535,6 +538,7 @@ export function ElementPropertiesPanel({
             label="Fuente"
             value={config.fontFamily || 'system-ui'}
             options={FONT_FAMILIES}
+            optionLabel={opt => opt}
             onChange={(v) => handleConfigChange('fontFamily', v)}
           />
           <NumberInput
