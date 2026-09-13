@@ -54,14 +54,18 @@ function ThemeList({ onEditTheme }) {
     }
   };
 
-  const handleNewTheme = async () => {
-    try {
-      const newTheme = await api.createTheme('Nuevo Theme', {}, null, 'A4-portrait', { type: 'color', value: '#FFFFFF' });
-      navigate(`/admin/themes/${newTheme.theme.id}/edit`);
-    } catch (err) {
-      alert('Error creando theme: ' + err.message);
+const handleNewTheme = async () => {
+  try {
+    const newTheme = await api.createTheme('Nuevo Theme', {}, null, 'A4-portrait', { type: 'color', value: '#FFFFFF' });
+    // Validar estructura de respuesta: el backend devuelve { message, theme: { id, ... } }
+    if (!newTheme || !newTheme.theme || !newTheme.theme.id) {
+      throw new Error('Respuesta inesperada del servidor al crear theme');
     }
-  };
+    navigate(`/admin/themes/${newTheme.theme.id}/edit`);
+  } catch (err) {
+    alert('Error creando theme: ' + (err.message || err));
+  }
+};
 
   const handleExport = (theme) => {
     const canvasState = theme.canvas_json ? (typeof theme.canvas_json === 'string' ? JSON.parse(theme.canvas_json) : theme.canvas_json) : null;
