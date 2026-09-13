@@ -290,7 +290,7 @@ export function ElementPropertiesPanel({
           label="Tipo de fondo"
           value={canvasConfig.background_config?.type || 'color'}
           options={BACKGROUND_TYPES}
-          optionLabel={BACKGROUND_TYPE_LABELS}
+          optionLabel={opt => BACKGROUND_TYPE_LABELS[opt]}
           onChange={handleBgTypeChange}
         />
         
@@ -467,7 +467,7 @@ export function ElementPropertiesPanel({
             label="Ajuste"
             value={config.objectFit || 'cover'}
             options={OBJECT_FITS}
-            optionLabel={OBJECT_FIT_LABELS}
+            optionLabel={opt => OBJECT_FIT_LABELS[opt]}
             onChange={(v) => handleConfigChange('objectFit', v)}
           />
         </>
@@ -583,7 +583,7 @@ export function ElementPropertiesPanel({
                 label="Estilo"
                 value={config.separatorStyle || 'solid'}
                 options={LINE_STYLES}
-                optionLabel={LINE_STYLE_LABELS}
+                optionLabel={opt => LINE_STYLE_LABELS[opt]}
                 onChange={(v) => handleConfigChange('separatorStyle', v)}
               />
             </>
@@ -652,7 +652,7 @@ export function ElementPropertiesPanel({
             label="Estilo"
             value={config.style || 'solid'}
             options={LINE_STYLES}
-            optionLabel={LINE_STYLE_LABELS}
+            optionLabel={opt => LINE_STYLE_LABELS[opt]}
             onChange={(v) => handleConfigChange('style', v)}
           />
           <NumberInput
@@ -672,7 +672,7 @@ export function ElementPropertiesPanel({
             label="Tipo"
             value={config.kind || 'divider-icon'}
             options={DECORATIVE_KINDS}
-            optionLabel={DECORATIVE_KIND_LABELS}
+            optionLabel={opt => DECORATIVE_KIND_LABELS[opt]}
             onChange={(v) => handleConfigChange('kind', v)}
           />
           {(config.kind === 'custom-svg') && (
