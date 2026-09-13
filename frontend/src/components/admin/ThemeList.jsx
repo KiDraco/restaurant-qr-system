@@ -59,7 +59,7 @@ const handleNewTheme = async () => {
     const newTheme = await api.createTheme('Nuevo Theme', {
       background_type: 'color',
       background_value: '#FFFFFF',
-    }, null, 'A4-portrait', { type: 'color', value: '#FFFFFF' });
+    }, null, null, 'A4-portrait');
     if (!newTheme || !newTheme.theme || !newTheme.theme.id) {
       throw new Error('Respuesta inesperada del servidor al crear theme');
     }
