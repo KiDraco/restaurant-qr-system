@@ -30,7 +30,7 @@ class Theme {
       sql: `INSERT INTO themes (name, config, is_default, is_active, canvas_json, page_format, background_config) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       args: [name, JSON.stringify(config), isDefault, false, canvasJson, pageFormat, backgroundConfig ? JSON.stringify(backgroundConfig) : JSON.stringify({ type: 'color', value: '#FFFFFF' })],
     });
-    return { id: result.lastInsertRowid, name, config, is_active: false, canvas_json: canvasJson, page_format: pageFormat, background_config: backgroundConfig };
+    return { id: result.lastInsertRowid, name, config, is_active: false, canvas_json: canvasJson, page_format: pageFormat, background_config: backgroundConfig ? JSON.stringify(backgroundConfig) : null };
   }
 
   static async activate(id) {
