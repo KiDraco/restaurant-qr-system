@@ -552,6 +552,7 @@ export function ElementPropertiesPanel({
             label="Peso"
             value={config.fontWeight || 'bold'}
             options={FONT_WEIGHTS}
+            optionLabel={opt => opt}
             onChange={(v) => handleConfigChange('fontWeight', v)}
           />
           <ColorInput
