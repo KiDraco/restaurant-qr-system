@@ -129,7 +129,8 @@ async function initializeDatabase() {
       const existing = await db.execute("SELECT COUNT(*) AS count FROM themes WHERE name = 'Clasico Centrado'");
       if (Number(existing.rows[0].count) === 0) {
         console.log('⚡ Seeding 5 themes...');
-        await db.execute('UPDATE themes SET is_active = 0');
+        // Cleanup total: borra todos los themes existentes y recrea los 5 templates
+        await db.execute('DELETE FROM themes');
         const themes = [
           {
             name: 'Clásico Centrado',
@@ -142,6 +143,7 @@ async function initializeDatabase() {
             ], page_format: 'A4-portrait', background_config: { type: 'color', value: '#FFF9F0' } }),
             is_active: true,
             is_default: true,
+            background_config: { type: 'color', value: '#FFF9F0' },
           },
           {
             name: 'Moderno Minimalista',
@@ -154,6 +156,7 @@ async function initializeDatabase() {
             ], page_format: 'A4-portrait', background_config: { type: 'color', value: '#FFFFFF' } }),
             is_active: true,
             is_default: false,
+            background_config: { type: 'color', value: '#FFFFFF' },
           },
           {
             name: 'Elegante Oro',
@@ -166,6 +169,7 @@ async function initializeDatabase() {
             ], page_format: 'A4-portrait', background_config: { type: 'color', value: '#FAFAFA' } }),
             is_active: false,
             is_default: false,
+            background_config: { type: 'color', value: '#FAFAFA' },
           },
           {
             name: 'Casual Vibrante',
@@ -178,6 +182,7 @@ async function initializeDatabase() {
             ], page_format: 'A4-portrait', background_config: { type: 'color', value: '#FEF9E7' } }),
             is_active: false,
             is_default: false,
+            background_config: { type: 'color', value: '#FEF9E7' },
           },
           {
             name: 'Rústico Campestre',
@@ -190,12 +195,13 @@ async function initializeDatabase() {
             ], page_format: 'A4-portrait', background_config: { type: 'color', value: '#FAF0E6' } }),
             is_active: false,
             is_default: false,
+            background_config: { type: 'color', value: '#FAF0E6' },
           },
         ];
         for (const t of themes) {
           await db.execute({
             sql: `INSERT INTO themes (name, config, is_default, is_active, canvas_json, page_format, background_config) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            args: [t.name, t.config, t.is_default, t.is_active, t.canvas_json, t.page_format || 'A4-portrait', JSON.stringify(t.background_config)],
+            args: [t.name, t.config, t.is_default ? 1 : 0, t.is_active ? 1 : 0, t.canvas_json, t.page_format || 'A4-portrait', JSON.stringify(t.background_config || { type: 'color', value: '#FFFFFF' })],
           });
         }
         console.log('✅ 5 themes seeded');
