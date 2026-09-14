@@ -195,7 +195,7 @@ async function initializeDatabase() {
         for (const t of themes) {
           await db.execute({
             sql: `INSERT INTO themes (name, config, is_default, is_active, canvas_json, page_format, background_config) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            args: [t.name, t.config, t.is_default, t.is_active, t.canvas_json, t.page_format || 'A4-portrait', t.background_config],
+            args: [t.name, t.config, t.is_default, t.is_active, t.canvas_json, t.page_format || 'A4-portrait', JSON.stringify(t.background_config)],
           });
         }
         console.log('✅ 5 themes seeded');
