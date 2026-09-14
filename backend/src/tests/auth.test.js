@@ -194,7 +194,7 @@ describe('POST /api/auth/register', () => {
 describe('Rate Limiting', () => {
   it('returns 429 after too many auth requests', async () => {
     const promises = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 55; i++) {
       promises.push(
         request(app)
           .post('/api/auth/login')

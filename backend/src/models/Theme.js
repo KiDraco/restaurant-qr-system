@@ -44,7 +44,7 @@ class Theme {
       sql: 'UPDATE themes SET is_active = 1 WHERE id = ?',
       args: [id],
     });
-    return result.affectedRows > 0;
+    return result.rowsAffected > 0;
   }
 
   static async update(id, name, config, canvasJson = null, pageFormat = null, backgroundConfig = null) {
@@ -81,7 +81,7 @@ class Theme {
       sql: `UPDATE themes SET ${updates.join(', ')} WHERE id = ?`,
       args,
     });
-    return result.affectedRows > 0;
+    return result.rowsAffected > 0;
   }
 
   static async delete(id) {
@@ -89,7 +89,7 @@ class Theme {
       sql: 'DELETE FROM themes WHERE id = ?',
       args: [id],
     });
-    return result.affectedRows > 0;
+    return result.rowsAffected > 0;
   }
 
   static async getConfig(id) {

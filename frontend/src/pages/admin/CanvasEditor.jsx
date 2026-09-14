@@ -223,21 +223,54 @@ export function CanvasEditor() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <svg className="animate-spin text-blue-600 text-4xl" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+      <div className="h-screen flex bg-gray-100">
+        <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="font-semibold text-gray-800">Elementos</h3>
+          </div>
+          <div className="p-4 text-sm text-gray-400">Cargando...</div>
+        </aside>
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4">
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/admin/themes')} className="p-2 hover:bg-gray-100 rounded" title="Volver">
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              <div>
+                <h2 className="font-semibold text-gray-800">Canvas Editor</h2>
+                <p className="text-xs text-gray-500">Cargando theme...</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-gray-500">Cargando</span>
+            </div>
+          </header>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm text-gray-500">Cargando theme...</p>
+            </div>
+          </div>
+        </main>
+        <aside className="w-80 bg-white border-l border-gray-200" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-8 text-center">
-        <svg className="mx-auto text-4xl text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77 1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-        <h2 className="text-2xl font-bold text-red-800 mb-2">Error cargando theme</h2>
-        <p className="text-gray-600 mb-4">{error}</p>
-        <button onClick={() => navigate('/admin/themes')} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-          Volver a Themes
-        </button>
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md p-6 bg-white rounded-lg shadow">
+          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01" /></svg>
+          </div>
+          <h3 className="font-semibold text-gray-800 mb-1">No se pudo cargar el theme</h3>
+          <p className="text-sm text-gray-500 mb-4">{error}</p>
+          <button onClick={() => navigate('/admin/themes')} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+            Volver a Themes
+          </button>
+        </div>
       </div>
     );
   }
