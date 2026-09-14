@@ -126,8 +126,9 @@ async function initializeDatabase() {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`);
       try { await db.execute('CREATE INDEX IF NOT EXISTS idx_themes_name_lower ON themes (lower(name))'); } catch (_) {}
-      const existing = await db.execute('SELECT COUNT(*) AS count FROM themes');
+      const existing = await db.execute("SELECT COUNT(*) AS count FROM themes WHERE name = 'Clasico Centrado'");
       if (Number(existing.rows[0].count) === 0) {
+        await db.execute({ sql: 'UPDATE themes SET is_active = 0', args: [] });
         const themes = [
           {
             name: 'Clásico Centrado',
