@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 
 const DEFAULT_CANVAS_CONFIG = {
   page_format: 'A4-portrait',
@@ -116,6 +116,10 @@ export function useCanvas() {
     grid: { enabled: true, size: 8 },
   });
 
+  // Ref mirrors de elements para callbacks estables (evita bucles de useEffect)
+  const elementsRef = useRef(elements);
+  elementsRef.current = elements;
+
   const canvasSize = useMemo(() => {
     const format = canvasConfig.page_format || 'A4-portrait';
     return PAGE_DIMENSIONS[format] || PAGE_DIMENSIONS['A4-portrait'];
@@ -131,7 +135,8 @@ export function useCanvas() {
 
   const addElement = useCallback((type, configOverrides = {}, customId = null) => {
     const defaults = DEFAULT_ELEMENT_CONFIG[type] || {};
-    const position = getDefaultPosition(elements, 794, 1123);
+    const current = elementsRef.current;
+    const position = getDefaultPosition(current, 794, 1123);
     
     const newElement = {
       id: customId || crypto.randomUUID(),
@@ -140,7 +145,7 @@ export function useCanvas() {
       y: configOverrides.y ?? position.y,
       width: configOverrides.width ?? (defaults.width || 200),
       height: configOverrides.height ?? (defaults.height || 100),
-      zIndex: elements.length,
+      zIndex: current.length,
       locked: configOverrides.locked || false,
       visible: configOverrides.visible !== false,
       config: { ...defaults, ...configOverrides },
@@ -148,7 +153,7 @@ export function useCanvas() {
 
     setElements(prev => [...prev, newElement]);
     return newElement.id;
-  }, [elements]);
+  }, []);
 
   const updateElement = useCallback((id, updates) => {
     setElements(prev => prev.map(el => {
@@ -179,7 +184,7 @@ export function useCanvas() {
   }, [selectedId]);
 
   const duplicateElement = useCallback((id) => {
-    const element = elements.find(el => el.id === id);
+    const element = elementsRef.current.find(el => el.id === id);
     if (!element) return;
     
     const newId = crypto.randomUUID();
@@ -188,12 +193,12 @@ export function useCanvas() {
       id: newId,
       x: element.x + 20,
       y: element.y + 20,
-      zIndex: elements.length,
+      zIndex: elementsRef.current.length,
     };
     
     setElements(prev => [...prev, duplicated]);
     return newId;
-  }, [elements]);
+  }, []);
 
   const reorderElements = useCallback((fromIndex, toIndex) => {
     setElements(prev => {

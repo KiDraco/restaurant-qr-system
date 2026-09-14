@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { Canvas } from '../../components/admin/canvas/Canvas';
@@ -39,9 +39,20 @@ export function CanvasEditor() {
     resetCanvas,
   } = useCanvas();
 
-  // Load theme on mount
+  // Ref para evitar re-carga infinita del mismo theme
+  const loadedIdRef = useRef(null);
+
+  // Resetear ref si el id cambia (navegación entre themes)
+  useEffect(() => {
+    loadedIdRef.current = null;
+  }, [id]);
+
+  // Load theme on mount — deps estables, solo se re-ejecuta si cambia el id
   useEffect(() => {
     if (!id) return;
+    if (loadedIdRef.current === id) return;
+    loadedIdRef.current = id;
+    resetCanvas();
     const loadTheme = async () => {
       setLoading(true);
       setError(null);
@@ -94,7 +105,7 @@ export function CanvasEditor() {
       }
     };
     loadTheme();
-  }, [id, setCanvasConfig, addElement]);
+  }, [id, setCanvasConfig, addElement, resetCanvas]);
 
   const handleSave = async () => {
     if (!id) return;
