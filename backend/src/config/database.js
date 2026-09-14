@@ -128,7 +128,8 @@ async function initializeDatabase() {
       try { await db.execute('CREATE INDEX IF NOT EXISTS idx_themes_name_lower ON themes (lower(name))'); } catch (_) {}
       const existing = await db.execute("SELECT COUNT(*) AS count FROM themes WHERE name = 'Clasico Centrado'");
       if (Number(existing.rows[0].count) === 0) {
-        await db.execute({ sql: 'UPDATE themes SET is_active = 0', args: [] });
+        console.log('⚡ Seeding 5 themes...');
+        await db.execute('UPDATE themes SET is_active = 0');
         const themes = [
           {
             name: 'Clásico Centrado',
@@ -197,6 +198,7 @@ async function initializeDatabase() {
             args: [t.name, t.config, t.is_default, t.is_active, t.canvas_json, t.page_format || 'A4-portrait', t.background_config],
           });
         }
+        console.log('✅ 5 themes seeded');
       }
     } catch (e) { console.error('⚠️ Migración themes falló:', e.message || e); }
 
