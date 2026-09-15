@@ -15,30 +15,12 @@ export function ImageElement({ element, isSelected, isDragging, isResizing }) {
     crop,
   } = config;
 
-  const style = {
-    width: element.width,
-    height: element.height,
-    borderRadius: `${borderRadius}px`,
-    opacity,
-    overflow: 'hidden',
-    cursor: element.locked ? 'default' : 'move',
-    transform: `scale(${scale})`,
-    transformOrigin: 'center center',
-  };
-
-  const imageStyle = {
-    width: '100%',
-    height: '100%',
-    objectFit,
-    objectPosition: crop ? `${crop.x * 100}% ${crop.y * 100}%` : 'center',
-    transform: crop && crop.width ? `scale(${1 / (crop.width || 1)})` : 'none',
-    transformOrigin: crop ? `${crop.x * 100}% ${crop.y * 100}%` : 'center',
-  };
+  const imageTransform = `scale(${scale})`;
 
   // Placeholder if no image
   if (!src) {
     return (
-      <g>
+      <g transform={imageTransform}>
         <rect
           x={0}
           y={0}
@@ -50,10 +32,10 @@ export function ImageElement({ element, isSelected, isDragging, isResizing }) {
           strokeDasharray="8,8"
           rx={borderRadius}
         />
-        <text 
-          x={element.width / 2} 
-          y={element.height / 2} 
-          textAnchor="middle" 
+        <text
+          x={element.width / 2}
+          y={element.height / 2}
+          textAnchor="middle"
           dominantBaseline="middle"
           fontSize="14"
           fill="#9CA3AF"
@@ -62,10 +44,10 @@ export function ImageElement({ element, isSelected, isDragging, isResizing }) {
         >
           📷 Imagen
         </text>
-        <text 
-          x={element.width / 2} 
-          y={element.height / 2 + 20} 
-          textAnchor="middle" 
+        <text
+          x={element.width / 2}
+          y={element.height / 2 + 20}
+          textAnchor="middle"
           dominantBaseline="middle"
           fontSize="11"
           fill="#D1D5DB"
@@ -79,16 +61,18 @@ export function ImageElement({ element, isSelected, isDragging, isResizing }) {
   }
 
   return (
-    <image
-      x={0}
-      y={0}
-      width={element.width}
-      height={element.height}
-      href={src}
-      style={style}
-      preserveAspectRatio={config.objectFit === 'cover' ? 'xMidYMid slice' : 'none'}
-      opacity={config.opacity}
-    />
+    <g transform={imageTransform}>
+      <image
+        x={0}
+        y={0}
+        width={element.width}
+        height={element.height}
+        href={src}
+        preserveAspectRatio={config.objectFit === 'cover' ? 'xMidYMid slice' : 'none'}
+        opacity={config.opacity}
+        style={{ cursor: element.locked ? 'default' : 'move', borderRadius: `${borderRadius}px`, overflow: 'hidden' }}
+      />
+    </g>
   );
 }
 
