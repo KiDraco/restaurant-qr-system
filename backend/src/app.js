@@ -39,7 +39,8 @@ app.use(cors({
   credentials: true
 }));
 // Raised from the 100kb default so base64 menu imports (Excel/PDF, up to ~5MB) fit.
-app.use(express.json({ limit: '8mb' }));
+    // Further increased to 50mb for theme canvas_json with base64 images
+    app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Security headers
