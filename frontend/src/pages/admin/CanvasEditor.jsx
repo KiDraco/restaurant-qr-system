@@ -75,10 +75,8 @@ export function CanvasEditor() {
       setError(null);
       try {
         const theme = await api.getTheme(id);
-        console.log('🔍 [loadTheme] theme from API:', { id: theme.id, name: theme.name, hasCanvasJson: !!theme.canvas_json, canvasKeys: theme.canvas_json ? Object.keys(theme.canvas_json) : null });
         if (theme.canvas_json) {
           const canvas = typeof theme.canvas_json === 'string' ? JSON.parse(theme.canvas_json) : theme.canvas_json;
-          console.log('🔍 [loadTheme] canvas:', { hasPages: !!(canvas.pages && Array.isArray(canvas.pages)), pagesCount: canvas.pages?.length, elementsCount: canvas.elements?.length });
           // Migrate legacy or load multi-page
           loadFromLegacyCanvas(canvas);
         } else if (theme.config) {
