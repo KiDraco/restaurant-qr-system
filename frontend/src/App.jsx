@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DynamicPageRenderer } from './components/client/DynamicPageRenderer';
 import Notification from './components/client/Notification';
 // Generate UUID for browser
-  const genId = () => crypto.randomUUID ? genId() : 'id-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  const genId = () => crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
 const API_URL = '/api';
 
