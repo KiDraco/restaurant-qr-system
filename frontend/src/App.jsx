@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DynamicPageRenderer } from './components/client/DynamicPageRenderer';
 import Notification from './components/client/Notification';
+// Generate UUID for browser
+  const genId = () => crypto.randomUUID ? genId() : 'id-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
 const API_URL = '/api';
 
@@ -34,6 +36,68 @@ function App() {
     return themePages.find(p => p.type === currentPageType) || themePages[0];
   }, [themePages, currentPageType]);
 
+  // Default fallback theme pages (used when no active theme or migration pending)
+  const getDefaultThemePages = useCallback(() => [
+    {
+      id: 'scan',
+      name: 'Login / QR',
+      type: 'scan',
+      icon: '📱',
+      elements: [
+        { id: genId(), type: 'text', x: 50, y: 80, width: 275, height: 60, zIndex: 0, locked: false, visible: true, config: { content: 'Bienvenido', fontSize: 28, fontFamily: 'system-ui', color: '#2A2A2A', textAlign: 'center', fontWeight: 'bold' } },
+        { id: genId(), type: 'text', x: 50, y: 150, width: 275, height: 40, zIndex: 1, locked: false, visible: true, config: { content: 'Escanea el QR de tu mesa', fontSize: 16, fontFamily: 'system-ui', color: '#666666', textAlign: 'center' } },
+        { id: genId(), type: 'image', x: 100, y: 220, width: 175, height: 175, zIndex: 2, locked: false, visible: true, config: { src: '', alt: 'Código QR', borderRadius: 12 } },
+        { id: genId(), type: 'text', x: 50, y: 420, width: 275, height: 40, zIndex: 3, locked: false, visible: true, config: { content: 'O ingresa tu número de mesa:', fontSize: 14, fontFamily: 'system-ui', color: '#666666', textAlign: 'center' } },
+        { id: genId(), type: 'action-button', x: 50, y: 480, width: 275, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'scanAnother', label: 'Escanear mesa', icon: 'qrcode', variant: 'primary', size: 'lg', fullWidth: true } },
+      ],
+      config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFF8F0' }, grid: { enabled: true, size: 8 } },
+    },
+    {
+      id: 'table',
+      name: 'Mesa Principal',
+      type: 'table',
+      icon: '🍽️',
+      elements: [
+        { id: genId(), type: 'table-number', x: 20, y: 30, width: 335, height: 60, zIndex: 0, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 36, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
+        { id: genId(), type: 'total-amount', x: 20, y: 100, width: 335, height: 50, zIndex: 1, locked: false, visible: true, config: { prefix: 'Total: ', fontSize: 24, fontWeight: 'bold', color: '#FF6B6B', textAlign: 'center' } },
+        { id: genId(), type: 'action-button', x: 20, y: 170, width: 335, height: 56, zIndex: 2, locked: false, visible: true, config: { action: 'viewMenu', label: 'Ver Menú', icon: 'utensils', variant: 'primary', size: 'lg', fullWidth: true } },
+        { id: genId(), type: 'action-button', x: 20, y: 240, width: 335, height: 56, zIndex: 3, locked: false, visible: true, config: { action: 'callWaiter', label: 'Llamar Mesero', icon: 'bell', variant: 'secondary', size: 'lg', fullWidth: true } },
+        { id: genId(), type: 'action-button', x: 20, y: 310, width: 335, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'viewBill', label: 'Ver Cuenta', icon: 'receipt', variant: 'outline', size: 'lg', fullWidth: true } },
+        { id: genId(), type: 'action-button', x: 20, y: 380, width: 335, height: 56, zIndex: 5, locked: false, visible: true, config: { action: 'requestBill', label: 'Pedir Cuenta', icon: 'dollar-sign', variant: 'primary', size: 'lg', fullWidth: true } },
+        { id: genId(), type: 'action-button', x: 20, y: 450, width: 335, height: 56, zIndex: 6, locked: false, visible: true, config: { action: 'scanAnother', label: 'Escanear otra mesa', icon: 'chevron-left', variant: 'ghost', size: 'md', fullWidth: true } },
+      ],
+      config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } },
+    },
+    {
+      id: 'menu',
+      name: 'Menú',
+      type: 'menu',
+      icon: '📖',
+      elements: [
+        { id: genId(), type: 'category-tabs', x: 10, y: 10, width: 355, height: 50, zIndex: 0, locked: false, visible: true, config: {} },
+        { id: genId(), type: 'search-bar', x: 10, y: 70, width: 355, height: 48, zIndex: 1, locked: false, visible: true, config: { placeholder: 'Buscar platos...' } },
+        { id: genId(), type: 'menu-list', x: 10, y: 130, width: 355, height: 450, zIndex: 2, locked: false, visible: true, config: { layout: 'list', showCategoryTitle: true, showProductImage: true, showProductDescription: true, showPrice: true } },
+        { id: genId(), type: 'cart-summary', x: 10, y: 590, width: 355, height: 60, zIndex: 3, locked: false, visible: true, config: { showItemCount: true, showTotal: true } },
+      ],
+      config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } },
+    },
+    {
+      id: 'bill',
+      name: 'Cuenta',
+      type: 'bill',
+      icon: '🧾',
+      elements: [
+        { id: genId(), type: 'text', x: 20, y: 30, width: 335, height: 40, zIndex: 0, locked: false, visible: true, config: { content: 'Cuenta Detallada', fontSize: 24, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
+        { id: genId(), type: 'table-number', x: 20, y: 80, width: 335, height: 40, zIndex: 1, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 20, textAlign: 'center' } },
+        { id: genId(), type: 'bill-items', x: 10, y: 130, width: 355, height: 350, zIndex: 2, locked: false, visible: true, config: { showQuantity: true, showUnitPrice: true, showSubtotal: true } },
+        { id: genId(), type: 'total-amount', x: 20, y: 500, width: 335, height: 60, zIndex: 3, locked: false, visible: true, config: { prefix: 'Total a pagar: ', fontSize: 28, fontWeight: 'bold', color: '#FF6B6B', textAlign: 'center' } },
+        { id: genId(), type: 'action-button', x: 20, y: 580, width: 335, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'requestBill', label: 'Solicitar Cuenta para Pagar', icon: 'dollar-sign', variant: 'primary', size: 'lg', fullWidth: true } },
+        { id: genId(), type: 'action-button', x: 20, y: 650, width: 335, height: 56, zIndex: 5, locked: false, visible: true, config: { action: 'viewMenu', label: 'Volver al Menú', icon: 'utensils', variant: 'secondary', size: 'lg', fullWidth: true } },
+      ],
+      config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FAFAFA' }, grid: { enabled: true, size: 8 } },
+    },
+  ], []);
+
   // Fetch active theme on mount
   useEffect(() => {
     const fetchTheme = async () => {
@@ -46,20 +110,28 @@ function App() {
               ? JSON.parse(data.theme.canvas_json) 
               : data.theme.canvas_json;
             
-            if (canvas.pages && Array.isArray(canvas.pages)) {
+            if (canvas.pages && Array.isArray(canvas.pages) && canvas.pages.length > 0) {
               setThemePages(canvas.pages);
               setGlobalConfig(canvas.globalConfig || data.theme.config || {});
+              setThemeLoading(false);
+              return;
             }
           }
         }
+        // No active theme or legacy format - use defaults
+        console.log('No active theme with multi-page format, using defaults');
+        setThemePages(getDefaultThemePages());
+        setGlobalConfig({ colors: { primary: '#FF6B6B', secondary: '#4ECDC4', background: '#FFFFFF', text: '#2A2A2A' }, font_family: 'system-ui', background_config: { type: 'color', value: '#FFFFFF' } });
       } catch (error) {
         console.error('Error cargando theme:', error);
+        setThemePages(getDefaultThemePages());
+        setGlobalConfig({ colors: { primary: '#FF6B6B', secondary: '#4ECDC4', background: '#FFFFFF', text: '#2A2A2A' }, font_family: 'system-ui', background_config: { type: 'color', value: '#FFFFFF' } });
       } finally {
         setThemeLoading(false);
       }
     };
     fetchTheme();
-  }, []);
+  }, [getDefaultThemePages]);
 
   // Fetch menu data
   useEffect(() => {
