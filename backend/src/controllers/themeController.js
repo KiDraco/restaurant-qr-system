@@ -24,9 +24,12 @@ class ThemeController {
         const defaultTheme = { colors: { primary: '#FF6B6B', secondary: '#4ECDC4', background: '#FFFFFF', text: '#2A2A2A' }, font_family: 'system' };
         return res.json({ config: defaultTheme });
       }
-      // Use Theme.getConfig which merges canvas and legacy config
-      const config = await Theme.getConfig(theme.id);
-      res.json({ config });
+      // Return full theme with canvas_json (for multi-page client rendering)
+      res.json({
+        ...theme,
+        canvas_json: theme.canvas_json ? JSON.parse(theme.canvas_json) : null,
+        background_config: theme.background_config ? JSON.parse(theme.background_config) : null,
+      });
     } catch (error) {
       next(error);
     }
