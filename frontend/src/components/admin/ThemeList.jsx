@@ -165,7 +165,7 @@ const handleNewTheme = async () => {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }} />
-        {/* Elementos del canvas como rectángulos */}
+        {/* Elementos del canvas - renderizado por tipo */}
         <svg width="100%" height="100%" viewBox="0 0 794 1123" preserveAspectRatio="xMidYMid meet" className="w-full h-full">
           {elements
             .slice()
@@ -175,7 +175,138 @@ const handleNewTheme = async () => {
               const y = (el.y || 0) / 1123 * 100;
               const w = (el.width || 0) / 794 * 100;
               const h = (el.height || 0) / 1123 * 100;
-              const bgColor = el.config?.color || el.config?.background || colors.primary;
+              const cfg = el.config || {};
+              
+              // Texto: mostrar como texto real truncado
+              if (el.type === 'text') {
+                const content = cfg.content || 'Texto';
+                const fontSize = Math.max(4, (cfg.fontSize || 16) * 0.15); // escalado para preview
+                const fontFamily = cfg.fontFamily || 'system-ui';
+                const fontWeight = cfg.fontWeight || 'normal';
+                const color = cfg.color || colors.text;
+                const align = cfg.textAlign || 'left';
+                const lines = content.split('\n').slice(0, 3); // máx 3 líneas
+                return (
+                  <g key={el.id} transform={`translate(${x}%, ${y}%)`}>
+                    <rect x="0" y="0" width={`${w}%`} height={`${h}%`} fill="transparent" />
+                    {lines.map((line, i) => (
+                      <text
+                        key={i}
+                        x="0"
+                        y={`${i * (fontSize * 1.3)}`}
+                        fontSize={fontSize}
+                        fontFamily={fontFamily}
+                        fontWeight={fontWeight}
+                        fill={color}
+                        textAnchor={align === 'center' ? 'middle' : align === 'right' ? 'end' : 'start'}
+                        dominantBaseline="hanging"
+                        style={{ width: `${w}%`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      >
+                        {line.length > 30 ? line.slice(0, 30) + '…' : line}
+                      </text>
+                    ))}
+                  </g>
+                );
+              }
+              
+              // Imagen: mostrar la imagen real o placeholder
+              if (el.type === 'image') {
+                const src = cfg.src;
+                const radius = cfg.borderRadius || 0;
+                return (
+                  <g key={el.id}>
+                    {src ? (
+                      <image
+                        x={`${x}%`}
+                        y={`${y}%`}
+                        width={`${w}%`}
+                        height={`${h}%`}
+                        href={src}
+                        rx={radius}
+                        ry={radius}
+                        style={{ objectFit: cfg.objectFit || 'cover' }}
+                        opacity={cfg.opacity ?? 1}
+                      />
+                    ) : (
+                      // Placeholder para imagen sin src
+                      <>
+                        <rect
+                          x={`${x}%`}
+                          y={`${y}%`}
+                          width={`${w}%`}
+                          height={`${h}%`}
+                          fill="#F3F4F6"
+                          stroke="#D1D5DB"
+                          strokeWidth="0.5"
+                          strokeDasharray="2,2"
+                          rx={radius}
+                          ry={radius}
+                        />
+                        <text
+                          x={`${x + w/2}%`}
+                          y={`${y + h/2}%`}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fontSize={Math.max(4, w * 0.15)}
+                          fill="#9CA3AF"
+                          fontFamily="system-ui"
+                        >
+                          📷
+                        </text>
+                      </>
+                    )}
+                  </g>
+                );
+              }
+              
+              // Categoría: barra con label
+              if (el.type === 'category') {
+                const label = cfg.label || 'Categoría';
+                const fontSize = Math.max(4, (cfg.fontSize || 18) * 0.15);
+                const fontFamily = cfg.fontFamily || 'system-ui';
+                const fontWeight = cfg.fontWeight || 'bold';
+                const color = cfg.color || colors.primary;
+                const showSep = cfg.separator !== false;
+                return (
+                  <g key={el.id}>
+                    <rect
+                      x={`${x}%`}
+                      y={`${y}%`}
+                      width={`${w}%`}
+                      height={`${h}%`}
+                      fill={cfg.background || 'transparent'}
+                      opacity={cfg.opacity ?? 1}
+                      rx={cfg.borderRadius || 0}
+                    />
+                    <text
+                      x={`${x + 2}%`}
+                      y={`${y + h/2}%`}
+                      dominantBaseline="middle"
+                      fontSize={fontSize}
+                      fontFamily={fontFamily}
+                      fontWeight={fontWeight}
+                      fill={color}
+                      style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    >
+                      {label.length > 25 ? label.slice(0, 25) + '…' : label}
+                    </text>
+                    {showSep && (
+                      <line
+                        x1={`${x}%`}
+                        y1={`${y + h}%`}
+                        x2={`${x + w}%`}
+                        y2={`${y + h}%`}
+                        stroke={color}
+                        strokeWidth="0.5"
+                        opacity={0.5}
+                      />
+                    )}
+                  </g>
+                );
+              }
+              
+              // Otros elementos (decorative, etc.): rectángulo simple
+              const bgColor = cfg.color || cfg.background || colors.primary;
               return (
                 <rect
                   key={el.id}
@@ -184,7 +315,8 @@ const handleNewTheme = async () => {
                   width={`${w}%`}
                   height={`${h}%`}
                   fill={bgColor}
-                  opacity={0.7}
+                  opacity={0.5}
+                  rx={cfg.borderRadius || 0}
                 />
               );
             })}

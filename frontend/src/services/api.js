@@ -355,6 +355,10 @@ class API {
       body: JSON.stringify({ name, config, canvas_json, page_format, background_config }),
       credentials: 'include'
     });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Error ${response.status}`);
+    }
     return response.json();
   }
 
@@ -365,6 +369,10 @@ class API {
       body: JSON.stringify(data),
       credentials: 'include'
     });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Error ${response.status}`);
+    }
     return response.json();
   }
 
@@ -374,6 +382,10 @@ class API {
       headers: this.getAuthHeaders(),
       credentials: 'include'
     });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Error ${response.status}`);
+    }
     return response.json();
   }
 
@@ -383,6 +395,10 @@ class API {
       headers: this.getAuthHeaders(),
       credentials: 'include'
     });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Error ${response.status}`);
+    }
     return response.json();
   }
 }
