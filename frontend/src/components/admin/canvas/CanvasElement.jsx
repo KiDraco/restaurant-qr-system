@@ -257,7 +257,7 @@ export function CanvasElement({
     isDragging: dndIsDragging,
   } = useDraggable({
     id: element.id,
-    disabled: element.locked,
+    disabled: element.locked || isResizing,
   });
 
   const style = useMemo(() => ({
@@ -351,7 +351,7 @@ export function CanvasElement({
       style={style}
       transform={`translate(${element.x}, ${element.y})`}
     >
-      <g ref={elementRef} onMouseDown={(e) => { e.stopPropagation(); onSelect(element.id); }}>
+      <g ref={elementRef} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => { e.stopPropagation(); onSelect(element.id); }}>
         {content}
       </g>
       
@@ -388,8 +388,9 @@ export function CanvasElement({
               fill="#3B82F6"
               stroke="white"
               strokeWidth={1}
-              cursor={handle.cursor}
-              onMouseDown={(e) => {
+cursor={handle.cursor}
+               onPointerDown={(e) => e.stopPropagation()}
+               onMouseDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   const vals = elementValuesRef.current;
