@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { DEFAULT_ELEMENT_CONFIG, PAGE_DIMENSIONS } from '../../../hooks/useCanvas';
 
 const FONT_FAMILIES = [
@@ -230,8 +230,12 @@ export function ElementPropertiesPanel({
   selectedId, 
   elements, 
   canvasConfig, 
+  canvasSize,
+  globalConfig,
   onUpdateElement, 
-  onUpdateCanvasConfig 
+  onUpdateCanvasConfig,
+  onUpdateGlobalConfig,
+  activePageType
 }) {
   const selectedElement = useMemo(
     () => elements.find(el => el.id === selectedId),
@@ -274,45 +278,113 @@ export function ElementPropertiesPanel({
   if (!selectedId) {
     return (
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <h3 className="font-semibold text-gray-800">Configuración del Canvas</h3>
+        {/* Global Theme Config */}
+        <h3 className="font-semibold text-gray-800">Configuración Global del Theme</h3>
         
-        <SectionTitle title="Formato de página" />
+        <SectionTitle title="Colores del Theme" />
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <ColorInput
+            label="Primario"
+            value={{ hex: globalConfig.colors?.primary || '#FF6B6B', opacity: 1 }}
+            onChange={(v) => onUpdateGlobalConfig({ colors: { ...globalConfig.colors, primary: v.hex } })}
+          />
+          <ColorInput
+            label="Secundario"
+            value={{ hex: globalConfig.colors?.secondary || '#4ECDC4', opacity: 1 }}
+            onChange={(v) => onUpdateGlobalConfig({ colors: { ...globalConfig.colors, secondary: v.hex } })}
+          />
+          <ColorInput
+            label="Fondo"
+            value={{ hex: globalConfig.colors?.background || '#FFFFFF', opacity: 1 }}
+            onChange={(v) => onUpdateGlobalConfig({ colors: { ...globalConfig.colors, background: v.hex } })}
+          />
+          <ColorInput
+            label="Texto"
+            value={{ hex: globalConfig.colors?.text || '#2A2A2A', opacity: 1 }}
+            onChange={(v) => onUpdateGlobalConfig({ colors: { ...globalConfig.colors, text: v.hex } })}
+          />
+        </div>
+        
+        <SectionTitle title="Tipografía Global" />
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <SelectInput
+            label="Fuente principal"
+            value={globalConfig.font_family || 'system-ui'}
+            options={FONT_FAMILIES}
+            optionLabel={opt => opt}
+            onChange={(v) => onUpdateGlobalConfig({ font_family: v })}
+          />
+        </div>
+        
+        <SectionTitle title="Fondo Global" />
         <SelectInput
-          label="Formato"
-          value={canvasConfig.page_format || 'A4-portrait'}
-          options={Object.keys(PAGE_DIMENSIONS)}
-          optionLabel={formatOptionLabel}
-          onChange={handlePageFormatChange}
+          label="Tipo de fondo"
+          value={globalConfig.background_config?.type || 'color'}
+          options={BACKGROUND_TYPES}
+          optionLabel={opt => BACKGROUND_TYPE_LABELS[opt]}
+          onChange={(v) => onUpdateGlobalConfig({ background_config: { ...globalConfig.background_config, type: v } })}
         />
         
-        <SectionTitle title="Fondo" />
+        {globalConfig.background_config?.type === 'color' && (
+          <ColorInput
+            label="Color de fondo"
+            value={globalConfig.background_config?.value || '#FFFFFF'}
+            onChange={(v) => onUpdateGlobalConfig({ background_config: { ...globalConfig.background_config, type: 'color', value: v.hex } })}
+          />
+        )}
+        
+        {globalConfig.background_config?.type === 'gradient' && (
+          <React.Fragment>
+            <ColorInput
+              label="Color inicial"
+              value={globalConfig.background_config?.value?.from || '#FF6B6B'}
+              onChange={(v) => onUpdateGlobalConfig({ background_config: { ...globalConfig.background_config, type: 'gradient', value: { ...globalConfig.background_config.value, from: v.hex } } })}
+            />
+            <ColorInput
+              label="Color final"
+              value={globalConfig.background_config?.value?.to || '#4ECDC4'}
+              onChange={(v) => onUpdateGlobalConfig({ background_config: { ...globalConfig.background_config, type: 'gradient', value: { ...globalConfig.background_config.value, to: v.hex } } })}
+            />
+          </React.Fragment>
+        )}
+        
+        {/* Page-specific Config */}
+        <SectionTitle title={`Página: ${activePageType || 'General'} (${canvasConfig.page_format || 'mobile-portrait'})`} />
+        <SelectInput
+          label="Formato de página"
+          value={canvasConfig.page_format || 'mobile-portrait'}
+          options={Object.keys(PAGE_DIMENSIONS)}
+          optionLabel={formatOptionLabel}
+          onChange={(v) => onUpdateCanvasConfig({ page_format: v })}
+        />
+        
         <SelectInput
           label="Tipo de fondo"
           value={canvasConfig.background_config?.type || 'color'}
           options={BACKGROUND_TYPES}
           optionLabel={opt => BACKGROUND_TYPE_LABELS[opt]}
-          onChange={handleBgTypeChange}
+          onChange={(v) => onUpdateCanvasConfig({ background_config: { ...canvasConfig.background_config, type: v } })}
         />
         
-        {(canvasConfig.background_config?.type || 'color') === 'color' && (
+        {canvasConfig.background_config?.type === 'color' && (
           <ColorInput
             label="Color de fondo"
             value={canvasConfig.background_config?.value || '#FFFFFF'}
-            onChange={handleColorBgChange}
+            onChange={(v) => onUpdateCanvasConfig({ background_config: { ...canvasConfig.background_config, type: 'color', value: v.hex } })}
           />
         )}
         
-        {(canvasConfig.background_config?.type || 'color') === 'gradient' && (
+        {canvasConfig.background_config?.type === 'gradient' && (
           <React.Fragment>
             <ColorInput
               label="Color inicial"
               value={canvasConfig.background_config?.value?.from || '#FF6B6B'}
-              onChange={handleGradientFromChange}
+              onChange={(v) => onUpdateCanvasConfig({ background_config: { ...canvasConfig.background_config, type: 'gradient', value: { ...canvasConfig.background_config.value, from: v.hex } } })}
             />
             <ColorInput
               label="Color final"
               value={canvasConfig.background_config?.value?.to || '#4ECDC4'}
-              onChange={handleGradientToChange}
+              onChange={(v) => onUpdateCanvasConfig({ background_config: { ...canvasConfig.background_config, type: 'gradient', value: { ...canvasConfig.background_config.value, to: v.hex } } })}
             />
           </React.Fragment>
         )}
@@ -751,6 +823,502 @@ export function ElementPropertiesPanel({
             value={config.linkUrl || ''}
             onChange={(v) => handleConfigChange('linkUrl', v)}
             placeholder="https://..."
+          />
+        </>
+      )}
+
+      {/* Dynamic Elements */}
+      {type === 'menu-list' && (
+        <>
+          <SelectInput
+            label="Layout"
+            value={config.layout || 'list'}
+            options={['list', 'grid', 'carousel']}
+            optionLabel={(l) => l === 'list' ? 'Lista' : l === 'grid' ? 'Cuadrícula' : 'Carrusel'}
+            onChange={(v) => handleConfigChange('layout', v)}
+          />
+          <ToggleInput
+            label="Mostrar título de categoría"
+            value={config.showCategoryTitle !== false}
+            onChange={(v) => handleConfigChange('showCategoryTitle', v)}
+          />
+          <ToggleInput
+            label="Mostrar imagen del producto"
+            value={config.showProductImage !== false}
+            onChange={(v) => handleConfigChange('showProductImage', v)}
+          />
+          <ToggleInput
+            label="Mostrar descripción"
+            value={config.showProductDescription !== false}
+            onChange={(v) => handleConfigChange('showProductDescription', v)}
+          />
+          <ToggleInput
+            label="Mostrar precio"
+            value={config.showPrice !== false}
+            onChange={(v) => handleConfigChange('showPrice', v)}
+          />
+          <NumberInput
+            label="Alto de imagen"
+            value={config.productImageHeight || 120}
+            onChange={(v) => handleConfigChange('productImageHeight', v)}
+            min={60}
+            max={300}
+          />
+          <NumberInput
+            label="Radio de imagen"
+            value={config.productImageRadius || 8}
+            onChange={(v) => handleConfigChange('productImageRadius', v)}
+            min={0}
+            max={50}
+          />
+          <NumberInput
+            label="Espaciado entre items"
+            value={config.itemSpacing || 16}
+            onChange={(v) => handleConfigChange('itemSpacing', v)}
+            min={0}
+            max={50}
+          />
+        </>
+      )}
+
+      {type === 'category-tabs' && (
+        <>
+          <SelectInput
+            label="Fuente"
+            value={config.fontFamily || 'system-ui'}
+            options={FONT_FAMILIES}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontFamily', v)}
+          />
+          <NumberInput
+            label="Tamaño"
+            value={config.fontSize || 14}
+            onChange={(v) => handleConfigChange('fontSize', v)}
+            min={10}
+            max={24}
+          />
+          <SelectInput
+            label="Peso"
+            value={config.fontWeight || 'medium'}
+            options={FONT_WEIGHTS}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontWeight', v)}
+          />
+          <ColorInput
+            label="Color activo"
+            value={{ hex: config.activeColor || '#FFFFFF', opacity: 1 }}
+            onChange={(v) => handleConfigChange('activeColor', v.hex)}
+          />
+          <ColorInput
+            label="Color inactivo"
+            value={{ hex: config.inactiveColor || '#666666', opacity: 1 }}
+            onChange={(v) => handleConfigChange('inactiveColor', v.hex)}
+          />
+          <ColorInput
+            label="Fondo"
+            value={{ hex: config.backgroundColor || '#FFFFFF', opacity: 1 }}
+            onChange={(v) => handleConfigChange('backgroundColor', v.hex)}
+          />
+          <ColorInput
+            label="Fondo activo"
+            value={{ hex: config.activeBackgroundColor || '#FF6B6B', opacity: 1 }}
+            onChange={(v) => handleConfigChange('activeBackgroundColor', v.hex)}
+          />
+          <NumberInput
+            label="Radio de borde"
+            value={config.borderRadius || 8}
+            onChange={(v) => handleConfigChange('borderRadius', v)}
+            min={0}
+            max={50}
+          />
+          <NumberInput
+            label="Espaciado"
+            value={config.spacing || 8}
+            onChange={(v) => handleConfigChange('spacing', v)}
+            min={0}
+            max={30}
+          />
+        </>
+      )}
+
+      {type === 'bill-items' && (
+        <>
+          <ToggleInput
+            label="Mostrar cantidad"
+            value={config.showQuantity !== false}
+            onChange={(v) => handleConfigChange('showQuantity', v)}
+          />
+          <ToggleInput
+            label="Mostrar precio unitario"
+            value={config.showUnitPrice !== false}
+            onChange={(v) => handleConfigChange('showUnitPrice', v)}
+          />
+          <ToggleInput
+            label="Mostrar subtotal"
+            value={config.showSubtotal !== false}
+            onChange={(v) => handleConfigChange('showSubtotal', v)}
+          />
+          <ColorInput
+            label="Color nombre"
+            value={{ hex: config.itemNameColor || '#2A2A2A', opacity: 1 }}
+            onChange={(v) => handleConfigChange('itemNameColor', v.hex)}
+          />
+          <ColorInput
+            label="Color detalle"
+            value={{ hex: config.detailColor || '#666666', opacity: 1 }}
+            onChange={(v) => handleConfigChange('detailColor', v.hex)}
+          />
+          <ColorInput
+            label="Color precio"
+            value={{ hex: config.priceColor || '#FF6B6B', opacity: 1 }}
+            onChange={(v) => handleConfigChange('priceColor', v.hex)}
+          />
+          <ColorInput
+            label="Color separador"
+            value={{ hex: config.separatorColor || '#E5E5E5', opacity: 1 }}
+            onChange={(v) => handleConfigChange('separatorColor', v.hex)}
+          />
+        </>
+      )}
+
+      {type === 'table-number' && (
+        <>
+          <TextInput
+            label="Prefijo"
+            value={config.prefix || 'Mesa '}
+            onChange={(v) => handleConfigChange('prefix', v)}
+            placeholder="Mesa "
+          />
+          <SelectInput
+            label="Fuente"
+            value={config.fontFamily || 'system-ui'}
+            options={FONT_FAMILIES}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontFamily', v)}
+          />
+          <NumberInput
+            label="Tamaño"
+            value={config.fontSize || 32}
+            onChange={(v) => handleConfigChange('fontSize', v)}
+            min={16}
+            max={80}
+          />
+          <SelectInput
+            label="Peso"
+            value={config.fontWeight || 'bold'}
+            options={FONT_WEIGHTS}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontWeight', v)}
+          />
+          <ColorInput
+            label="Color"
+            value={{ hex: config.color || '#2A2A2A', opacity: 1 }}
+            onChange={(v) => handleConfigChange('color', v.hex)}
+          />
+          <SelectInput
+            label="Alineación"
+            value={config.textAlign || 'center'}
+            options={TEXT_ALIGNMENTS}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('textAlign', v)}
+          />
+        </>
+      )}
+
+      {type === 'total-amount' && (
+        <>
+          <TextInput
+            label="Prefijo"
+            value={config.prefix || 'Total: '}
+            onChange={(v) => handleConfigChange('prefix', v)}
+            placeholder="Total: "
+          />
+          <SelectInput
+            label="Fuente"
+            value={config.fontFamily || 'system-ui'}
+            options={FONT_FAMILIES}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontFamily', v)}
+          />
+          <NumberInput
+            label="Tamaño"
+            value={config.fontSize || 28}
+            onChange={(v) => handleConfigChange('fontSize', v)}
+            min={16}
+            max={80}
+          />
+          <SelectInput
+            label="Peso"
+            value={config.fontWeight || 'bold'}
+            options={FONT_WEIGHTS}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontWeight', v)}
+          />
+          <ColorInput
+            label="Color"
+            value={{ hex: config.color || '#FF6B6B', opacity: 1 }}
+            onChange={(v) => handleConfigChange('color', v.hex)}
+          />
+          <SelectInput
+            label="Alineación"
+            value={config.textAlign || 'center'}
+            options={TEXT_ALIGNMENTS}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('textAlign', v)}
+          />
+          <ToggleInput
+            label="Mostrar símbolo moneda"
+            value={config.showCurrency !== false}
+            onChange={(v) => handleConfigChange('showCurrency', v)}
+          />
+        </>
+      )}
+
+      {type === 'action-button' && (
+        <>
+          <SelectInput
+            label="Acción"
+            value={config.action || 'viewMenu'}
+            options={['viewMenu', 'callWaiter', 'requestBill', 'viewBill', 'scanAnother']}
+            optionLabel={(a) => ({
+              viewMenu: 'Ver Menú',
+              callWaiter: 'Llamar Mesero',
+              requestBill: 'Pedir Cuenta',
+              viewBill: 'Ver Cuenta',
+              scanAnother: 'Escanear otra mesa'
+            })[a]}
+            onChange={(v) => handleConfigChange('action', v)}
+          />
+          <TextInput
+            label="Etiqueta"
+            value={config.label || 'Ver Menú'}
+            onChange={(v) => handleConfigChange('label', v)}
+            placeholder="Ver Menú"
+          />
+          <SelectInput
+            label="Icono"
+            value={config.icon || 'utensils'}
+            options={['utensils', 'bell', 'receipt', 'dollar-sign', 'qrcode', 'chevron-left']}
+            optionLabel={(i) => i}
+            onChange={(v) => handleConfigChange('icon', v)}
+          />
+          <SelectInput
+            label="Variante"
+            value={config.variant || 'primary'}
+            options={['primary', 'secondary', 'outline', 'ghost']}
+            optionLabel={(v) => v}
+            onChange={(v) => handleConfigChange('variant', v)}
+          />
+          <SelectInput
+            label="Tamaño"
+            value={config.size || 'lg'}
+            options={['sm', 'md', 'lg', 'xl']}
+            optionLabel={(s) => s}
+            onChange={(v) => handleConfigChange('size', v)}
+          />
+          <ToggleInput
+            label="Ancho completo"
+            value={config.fullWidth !== false}
+            onChange={(v) => handleConfigChange('fullWidth', v)}
+          />
+          <SelectInput
+            label="Fuente"
+            value={config.fontFamily || 'system-ui'}
+            options={FONT_FAMILIES}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontFamily', v)}
+          />
+          <NumberInput
+            label="Tamaño fuente"
+            value={config.fontSize || 16}
+            onChange={(v) => handleConfigChange('fontSize', v)}
+            min={12}
+            max={24}
+          />
+          <SelectInput
+            label="Peso"
+            value={config.fontWeight || 'semibold'}
+            options={FONT_WEIGHTS}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontWeight', v)}
+          />
+          <NumberInput
+            label="Radio de borde"
+            value={config.borderRadius || 12}
+            onChange={(v) => handleConfigChange('borderRadius', v)}
+            min={0}
+            max={50}
+          />
+        </>
+      )}
+
+      {type === 'search-bar' && (
+        <>
+          <TextInput
+            label="Placeholder"
+            value={config.placeholder || 'Buscar platos...'}
+            onChange={(v) => handleConfigChange('placeholder', v)}
+            placeholder="Buscar platos..."
+          />
+          <SelectInput
+            label="Fuente"
+            value={config.fontFamily || 'system-ui'}
+            options={FONT_FAMILIES}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontFamily', v)}
+          />
+          <NumberInput
+            label="Tamaño"
+            value={config.fontSize || 16}
+            onChange={(v) => handleConfigChange('fontSize', v)}
+            min={12}
+            max={24}
+          />
+          <SelectInput
+            label="Peso"
+            value={config.fontWeight || 'normal'}
+            options={FONT_WEIGHTS}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontWeight', v)}
+          />
+          <ColorInput
+            label="Color texto"
+            value={{ hex: config.color || '#2A2A2A', opacity: 1 }}
+            onChange={(v) => handleConfigChange('color', v.hex)}
+          />
+          <ColorInput
+            label="Color fondo"
+            value={{ hex: config.backgroundColor || '#FFFFFF', opacity: 1 }}
+            onChange={(v) => handleConfigChange('backgroundColor', v.hex)}
+          />
+          <ColorInput
+            label="Color borde"
+            value={{ hex: config.borderColor || '#E5E5E5', opacity: 1 }}
+            onChange={(v) => handleConfigChange('borderColor', v.hex)}
+          />
+          <NumberInput
+            label="Radio de borde"
+            value={config.borderRadius || 12}
+            onChange={(v) => handleConfigChange('borderRadius', v)}
+            min={0}
+            max={50}
+          />
+          <ToggleInput
+            label="Mostrar icono"
+            value={config.showIcon !== false}
+            onChange={(v) => handleConfigChange('showIcon', v)}
+          />
+        </>
+      )}
+
+      {type === 'cart-summary' && (
+        <>
+          <ToggleInput
+            label="Mostrar contador"
+            value={config.showItemCount !== false}
+            onChange={(v) => handleConfigChange('showItemCount', v)}
+          />
+          <ToggleInput
+            label="Mostrar total"
+            value={config.showTotal !== false}
+            onChange={(v) => handleConfigChange('showTotal', v)}
+          />
+          <SelectInput
+            label="Fuente"
+            value={config.fontFamily || 'system-ui'}
+            options={FONT_FAMILIES}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontFamily', v)}
+          />
+          <NumberInput
+            label="Tamaño"
+            value={config.fontSize || 14}
+            onChange={(v) => handleConfigChange('fontSize', v)}
+            min={10}
+            max={20}
+          />
+          <SelectInput
+            label="Peso"
+            value={config.fontWeight || 'medium'}
+            options={FONT_WEIGHTS}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontWeight', v)}
+          />
+          <ColorInput
+            label="Color texto"
+            value={{ hex: config.color || '#2A2A2A', opacity: 1 }}
+            onChange={(v) => handleConfigChange('color', v.hex)}
+          />
+          <ColorInput
+            label="Color fondo"
+            value={{ hex: config.backgroundColor || '#FEF9E7', opacity: 1 }}
+            onChange={(v) => handleConfigChange('backgroundColor', v.hex)}
+          />
+          <ColorInput
+            label="Color borde"
+            value={{ hex: config.borderColor || '#F5E6A0', opacity: 1 }}
+            onChange={(v) => handleConfigChange('borderColor', v.hex)}
+          />
+          <NumberInput
+            label="Radio de borde"
+            value={config.borderRadius || 8}
+            onChange={(v) => handleConfigChange('borderRadius', v)}
+            min={0}
+            max={30}
+          />
+        </>
+      )}
+
+      {type === 'promo-banner' && (
+        <>
+          <ToggleInput
+            label="Mostrar título"
+            value={config.showTitle !== false}
+            onChange={(v) => handleConfigChange('showTitle', v)}
+          />
+          <TextInput
+            label="Título"
+            value={config.title || 'Promociones'}
+            onChange={(v) => handleConfigChange('title', v)}
+            placeholder="Promociones"
+          />
+          <SelectInput
+            label="Fuente"
+            value={config.fontFamily || 'system-ui'}
+            options={FONT_FAMILIES}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontFamily', v)}
+          />
+          <NumberInput
+            label="Tamaño"
+            value={config.fontSize || 18}
+            onChange={(v) => handleConfigChange('fontSize', v)}
+            min={12}
+            max={30}
+          />
+          <SelectInput
+            label="Peso"
+            value={config.fontWeight || 'bold'}
+            options={FONT_WEIGHTS}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontWeight', v)}
+          />
+          <ColorInput
+            label="Color texto"
+            value={{ hex: config.color || '#FFFFFF', opacity: 1 }}
+            onChange={(v) => handleConfigChange('color', v.hex)}
+          />
+          <ColorInput
+            label="Color fondo"
+            value={{ hex: config.backgroundColor || '#FF6B6B', opacity: 1 }}
+            onChange={(v) => handleConfigChange('backgroundColor', v.hex)}
+          />
+          <NumberInput
+            label="Radio de borde"
+            value={config.borderRadius || 12}
+            onChange={(v) => handleConfigChange('borderRadius', v)}
+            min={0}
+            max={50}
           />
         </>
       )}

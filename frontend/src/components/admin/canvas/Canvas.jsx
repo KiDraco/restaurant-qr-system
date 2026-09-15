@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { CanvasElement } from './CanvasElement';
-import { PAGE_DIMENSIONS } from '../../../hooks/useCanvas';
 
 /**
  * Grid pattern background
@@ -24,6 +23,7 @@ export function Canvas({
   elements, 
   selectedId, 
   canvasConfig, 
+  canvasSize,
   onSelectElement, 
   onUpdateElement,
   onDeleteElement,
@@ -31,8 +31,8 @@ export function Canvas({
   onReorderElements,
 }) {
   const canvasRef = useRef(null);
-  const format = canvasConfig.page_format || 'A4-portrait';
-  const dimensions = PAGE_DIMENSIONS[format] || { width: 794, height: 1123 };
+  const format = canvasConfig.page_format || 'mobile-portrait';
+  const dimensions = canvasSize || { width: 375, height: 667 };
   const background = canvasConfig.background_config || { type: 'color', value: '#FFFFFF' };
   const grid = canvasConfig.grid || { enabled: true, size: 8 };
 

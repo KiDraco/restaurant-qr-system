@@ -9,6 +9,191 @@ import { SeparatorElement } from './elements/SeparatorElement';
 import { DecorativeElement } from './elements/DecorativeElement';
 import { LogoElement } from './elements/LogoElement';
 
+// Dynamic element preview components (for editor)
+function MenuListPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  const itemCount = 4;
+  const itemHeight = Math.min(height / itemCount, 80);
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} fill="#F9FAFB" stroke="#E5E7EB" strokeWidth={1} rx={8} />
+      {Array.from({ length: itemCount }, (_, i) => (
+        <g key={i} transform={`translate(12, ${12 + i * (itemHeight + 8)})`}>
+          {cfg.showProductImage !== false && (
+            <rect x={0} y={0} width={60} height={60} fill="#E5E7EB" rx={cfg.productImageRadius || 8} />
+          )}
+          <rect x={cfg.showProductImage !== false ? 72 : 0} y={8} width={width - (cfg.showProductImage !== false ? 84 : 12)} height={16} fill="#D1D5DB" rx={4} />
+          {cfg.showProductDescription !== false && (
+            <rect x={cfg.showProductImage !== false ? 72 : 0} y={28} width={width - (cfg.showProductImage !== false ? 84 : 12)} height={10} fill="#E5E7EB" rx={4} />
+          )}
+          {cfg.showPrice !== false && (
+            <rect x={cfg.showProductImage !== false ? 72 : 0} y={42} width={50} height={14} fill="#FEF3C7" rx={4} />
+          )}
+        </g>
+      ))}
+      <text x={width/2} y={height - 8} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">
+        [Lista de Menú - {cfg.layout || 'list'}]
+      </text>
+    </g>
+  );
+}
+
+function CategoryTabsPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  const tabCount = 3;
+  const tabWidth = width / tabCount;
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} fill={cfg.backgroundColor || '#FFFFFF'} stroke="#E5E7EB" strokeWidth={1} rx={cfg.borderRadius || 8} />
+      {['Entrantes', 'Principales', 'Postres'].map((label, i) => (
+        <g key={i} transform={`translate(${i * tabWidth}, 0)`}>
+          <rect x={4} y={4} width={tabWidth - 8} height={height - 8} fill={i === 0 ? cfg.activeBackgroundColor || '#FF6B6B' : 'transparent'} rx={cfg.borderRadius || 8} />
+          <text x={tabWidth/2} y={height/2 + 4} textAnchor="middle" fontSize={cfg.fontSize || 14} fontFamily={cfg.fontFamily || 'system-ui'} fontWeight={cfg.fontWeight || 'medium'} fill={i === 0 ? cfg.activeColor || '#FFFFFF' : cfg.inactiveColor || '#666666'}>
+            {label}
+          </text>
+        </g>
+      ))}
+      <text x={width/2} y={height + 14} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">[Tabs Categoría]</text>
+    </g>
+  );
+}
+
+function BillItemsPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  const items = ['2× Pizza Margherita', '1× Coca Cola', '1× Flan Casero'];
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} fill="#FAFAFA" stroke="#E5E7EB" strokeWidth={1} rx={8} />
+      {items.map((item, i) => (
+        <g key={i} transform={`translate(12, ${16 + i * 32})`}>
+          <text x={0} y={0} fontSize={cfg.itemNameSize || 14} fontFamily="system-ui" fontWeight={cfg.itemNameWeight || 'semibold'} fill={cfg.itemNameColor || '#2A2A2A'}>{item}</text>
+          {cfg.showUnitPrice !== false && <text x={width - 60} y={0} fontSize={cfg.priceSize || 14} fontFamily="system-ui" fontWeight={cfg.priceWeight || 'bold'} fill={cfg.priceColor || '#FF6B6B'} textAnchor="end">$8.500</text>}
+          {cfg.showQuantity !== false && <text x={width - 100} y={0} fontSize={12} fontFamily="system-ui" fill={cfg.detailColor || '#666666'} textAnchor="end">x2</text>}
+          {cfg.showSubtotal !== false && <text x={width - 12} y={0} fontSize={cfg.priceSize || 14} fontFamily="system-ui" fontWeight={cfg.priceWeight || 'bold'} fill={cfg.priceColor || '#FF6B6B'} textAnchor="end">$17.000</text>}
+        </g>
+      ))}
+      {items.length > 0 && (
+        <line x1={12} y1={16 + items.length * 32} x2={width - 12} y2={16 + items.length * 32} stroke={cfg.separatorColor || '#E5E5E5'} strokeWidth={1} />
+      )}
+      <text x={width/2} y={height - 4} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">[Items de Cuenta]</text>
+    </g>
+  );
+}
+
+function TableNumberPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} fill="transparent" />
+      <text 
+        x={cfg.textAlign === 'center' ? width/2 : cfg.textAlign === 'right' ? width : 0}
+        y={height/2 + 6}
+        textAnchor={cfg.textAlign === 'center' ? 'middle' : cfg.textAlign === 'right' ? 'end' : 'start'}
+        fontSize={cfg.fontSize || 32}
+        fontFamily={cfg.fontFamily || 'system-ui'}
+        fontWeight={cfg.fontWeight || 'bold'}
+        fill={cfg.color || '#2A2A2A'}
+      >
+        {cfg.prefix || 'Mesa '}5
+      </text>
+      <text x={width/2} y={height + 14} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">[Número de Mesa]</text>
+    </g>
+  );
+}
+
+function TotalAmountPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} fill="transparent" />
+      <text 
+        x={cfg.textAlign === 'center' ? width/2 : cfg.textAlign === 'right' ? width : 0}
+        y={height/2 + 6}
+        textAnchor={cfg.textAlign === 'center' ? 'middle' : cfg.textAlign === 'right' ? 'end' : 'start'}
+        fontSize={cfg.fontSize || 28}
+        fontFamily={cfg.fontFamily || 'system-ui'}
+        fontWeight={cfg.fontWeight || 'bold'}
+        fill={cfg.color || '#FF6B6B'}
+      >
+        {cfg.prefix || 'Total: '}$42.500
+      </text>
+      <text x={width/2} y={height + 14} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">[Total a Pagar]</text>
+    </g>
+  );
+}
+
+function ActionButtonPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  const variants = {
+    primary: { bg: '#FF6B6B', color: '#FFFFFF', border: '#FF6B6B' },
+    secondary: { bg: '#4ECDC4', color: '#FFFFFF', border: '#4ECDC4' },
+    outline: { bg: 'transparent', color: '#FF6B6B', border: '#FF6B6B' },
+    ghost: { bg: 'transparent', color: '#6B7280', border: 'transparent' },
+  };
+  const v = variants[cfg.variant || 'primary'] || variants.primary;
+  const icons = { utensils: '🍽️', bell: '🔔', receipt: '🧾', 'dollar-sign': '💰', qrcode: '📱', 'chevron-left': '←' };
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} rx={cfg.borderRadius || 12} fill={v.bg} stroke={v.border} strokeWidth={cfg.variant === 'outline' ? 2 : 0} />
+      <text x={width/2} y={height/2 + 5} textAnchor="middle" fontSize={cfg.fontSize || 16} fontFamily={cfg.fontFamily || 'system-ui'} fontWeight={cfg.fontWeight || 'semibold'} fill={v.color}>
+        {icons[cfg.icon || 'utensils'] || cfg.icon} {cfg.label || 'Ver Menú'}
+      </text>
+      <text x={width/2} y={height + 14} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">[Botón: {cfg.action || 'viewMenu'}]</text>
+    </g>
+  );
+}
+
+function SearchBarPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} rx={cfg.borderRadius || 12} fill={cfg.backgroundColor || '#FFFFFF'} stroke={cfg.borderColor || '#E5E7EB'} strokeWidth={1} />
+      {cfg.showIcon && <text x={16} y={height/2 + 5} fontSize={16} textAnchor="middle">🔍</text>}
+      <text x={cfg.showIcon ? 40 : 16} y={height/2 + 5} fontSize={cfg.fontSize || 16} fontFamily={cfg.fontFamily || 'system-ui'} fontWeight={cfg.fontWeight || 'normal'} fill={cfg.color || '#9CA3AF'}>
+        {cfg.placeholder || 'Buscar platos...'}
+      </text>
+      <text x={width/2} y={height + 14} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">[Barra de Búsqueda]</text>
+    </g>
+  );
+}
+
+function CartSummaryPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} rx={cfg.borderRadius || 8} fill={cfg.backgroundColor || '#FEF9E7'} stroke={cfg.borderColor || '#F5E6A0'} strokeWidth={1} />
+      <text x={width/2} y={height/2 + 5} textAnchor="middle" fontSize={cfg.fontSize || 14} fontFamily={cfg.fontFamily || 'system-ui'} fontWeight={cfg.fontWeight || 'medium'} fill={cfg.color || '#2A2A2A'}>
+        {cfg.showItemCount !== false ? '3 items' : ''} {cfg.showItemCount !== false && cfg.showTotal !== false ? '·' : ''} {cfg.showTotal !== false ? '$42.500' : ''}
+      </text>
+      <text x={width/2} y={height + 14} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">[Resumen Carrito]</text>
+    </g>
+  );
+}
+
+function PromoBannerPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} rx={cfg.borderRadius || 12} fill={cfg.backgroundColor || '#FF6B6B'} />
+      {cfg.showTitle !== false && (
+        <text x={width/2} y={height/2 + 6} textAnchor="middle" fontSize={cfg.fontSize || 18} fontFamily={cfg.fontFamily || 'system-ui'} fontWeight={cfg.fontWeight || 'bold'} fill={cfg.color || '#FFFFFF'}>
+          {cfg.title || 'Promociones'}
+        </text>
+      )}
+      <text x={width/2} y={height + 14} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">[Banner Promociones]</text>
+    </g>
+  );
+}
+
 const elementComponents = {
   image: ImageElement,
   text: TextElement,
@@ -17,6 +202,16 @@ const elementComponents = {
   separator: SeparatorElement,
   decorative: DecorativeElement,
   logo: LogoElement,
+  // Dynamic elements (preview in editor)
+  'menu-list': MenuListPreview,
+  'category-tabs': CategoryTabsPreview,
+  'bill-items': BillItemsPreview,
+  'table-number': TableNumberPreview,
+  'total-amount': TotalAmountPreview,
+  'action-button': ActionButtonPreview,
+  'search-bar': SearchBarPreview,
+  'cart-summary': CartSummaryPreview,
+  'promo-banner': PromoBannerPreview,
 };
 
 const RESIZE_HANDLES = [
