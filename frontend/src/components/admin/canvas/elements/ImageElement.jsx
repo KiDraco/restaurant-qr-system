@@ -2,6 +2,7 @@ import React from 'react';
 
 /**
  * ImageElement - renders an image element on the canvas
+ * Note: positioned by parent CanvasElement via translate(x, y) transform
  */
 export function ImageElement({ element, isSelected, isDragging, isResizing }) {
   const config = element.config || {};
@@ -11,16 +12,12 @@ export function ImageElement({ element, isSelected, isDragging, isResizing }) {
     borderRadius = 0, 
     opacity = 1, 
     objectFit = 'cover',
-    scale = 1,
-    crop,
   } = config;
-
-  const imageTransform = `scale(${scale})`;
 
   // Placeholder if no image
   if (!src) {
     return (
-      <g transform={imageTransform}>
+      <g>
         <rect
           x={0}
           y={0}
@@ -61,18 +58,16 @@ export function ImageElement({ element, isSelected, isDragging, isResizing }) {
   }
 
   return (
-    <g transform={imageTransform}>
-      <image
-        x={0}
-        y={0}
-        width={element.width}
-        height={element.height}
-        href={src}
-        preserveAspectRatio={config.objectFit === 'cover' ? 'xMidYMid slice' : 'none'}
-        opacity={config.opacity}
-        style={{ cursor: element.locked ? 'default' : 'move', borderRadius: `${borderRadius}px`, overflow: 'hidden' }}
-      />
-    </g>
+    <image
+      x={0}
+      y={0}
+      width={element.width}
+      height={element.height}
+      href={src}
+      preserveAspectRatio={objectFit === 'cover' ? 'xMidYMid slice' : 'none'}
+      opacity={opacity}
+      style={{ cursor: element.locked ? 'default' : 'move', borderRadius: `${borderRadius}px`, overflow: 'hidden' }}
+    />
   );
 }
 

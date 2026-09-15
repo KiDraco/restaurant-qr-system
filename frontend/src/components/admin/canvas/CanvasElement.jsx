@@ -240,6 +240,13 @@ export function CanvasElement({
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 });
   const elementRef = useRef(null);
+  // Ref to always have current element values (avoids stale closure in resize)
+  const elementValuesRef = useRef({ x: element.x, y: element.y, width: element.width, height: element.height });
+
+  // Update ref on every render
+  useEffect(() => {
+    elementValuesRef.current = { x: element.x, y: element.y, width: element.width, height: element.height };
+  }, [element.x, element.y, element.width, element.height]);
 
   const {
     attributes,
@@ -383,49 +390,50 @@ export function CanvasElement({
               strokeWidth={1}
               cursor={handle.cursor}
               onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (element.locked) return;
-                setIsResizing(true);
-                setResizeHandle(handle);
-                const startX = e.clientX;
-                const startY = e.clientY;
-                const startWidth = element.width;
-                const startHeight = element.height;
-                const startXPos = element.x;
-                const startYPos = element.y;
-                
-                const handleMove = (moveEvent) => {
-                  const dx = (moveEvent.clientX - startX) * (handle.dx !== 0 ? 1 : 0);
-                  const dy = (moveEvent.clientY - startY) * (handle.dy !== 0 ? 1 : 0);
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const vals = elementValuesRef.current;
+                  if (vals.locked) return;
+                  setIsResizing(true);
+                  setResizeHandle(handle);
+                  const startX = e.clientX;
+                  const startY = e.clientY;
+                  const startWidth = vals.width;
+                  const startHeight = vals.height;
+                  const startXPos = vals.x;
+                  const startYPos = vals.y;
                   
-                  let newX = element.x;
-                  let newY = element.y;
-                  let newWidth = element.width;
-                  let newHeight = element.height;
+                  const handleMove = (moveEvent) => {
+                    const dx = (moveEvent.clientX - startX) * (handle.dx !== 0 ? 1 : 0);
+                    const dy = (moveEvent.clientY - startY) * (handle.dy !== 0 ? 1 : 0);
+                    
+                    let newX = vals.x;
+                    let newY = vals.y;
+                    let newWidth = vals.width;
+                    let newHeight = vals.height;
+                    
+                    if (handle.dx === -1) { newX = vals.x + dx; newWidth = vals.width - dx; }
+                    if (handle.dx === 1) { newWidth = vals.width + dx; }
+                    if (handle.dy === -1) { newY = vals.y + dy; newHeight = vals.height - dy; }
+                    if (handle.dy === 1) { newHeight = vals.height + dy; }
+                    
+                    newWidth = Math.max(20, Math.min(newWidth, 794 - newX));
+                    newHeight = Math.max(20, Math.min(newHeight, 1123 - newY));
+                    newX = Math.max(0, Math.min(newX, 794 - newWidth));
+                    newY = Math.max(0, Math.min(newY, 1123 - newHeight));
+                    
+                    onUpdate(element.id, { x: newX, y: newY, width: newWidth, height: newHeight });
+                  };
                   
-                  if (handle.dx === -1) { newX = element.x + dx; newWidth = element.width - dx; }
-                  if (handle.dx === 1) { newWidth = element.width + dx; }
-                  if (handle.dy === -1) { newY = element.y + dy; newHeight = element.height - dy; }
-                  if (handle.dy === 1) { newHeight = element.height + dy; }
+                  const handleUp = () => {
+                    window.removeEventListener('mousemove', handleMove);
+                    window.removeEventListener('mouseup', handleUp);
+                    setIsResizing(false);
+                  };
                   
-                  newWidth = Math.max(20, Math.min(newWidth, 794 - newX));
-                  newHeight = Math.max(20, Math.min(newHeight, 1123 - newY));
-                  newX = Math.max(0, Math.min(newX, 794 - newWidth));
-                  newY = Math.max(0, Math.min(newY, 1123 - newHeight));
-                  
-                  onUpdate(element.id, { x: newX, y: newY, width: newWidth, height: newHeight });
-                };
-                
-                const handleUp = () => {
-                  window.removeEventListener('mousemove', handleMove);
-                  window.removeEventListener('mouseup', handleUp);
-                  setIsResizing(false);
-                };
-                
-                window.addEventListener('mousemove', handleMove);
-                window.addEventListener('mouseup', handleUp);
-              }}
+                  window.addEventListener('mousemove', handleMove);
+                  window.addEventListener('mouseup', handleUp);
+                }}
             />
           ))}
           
