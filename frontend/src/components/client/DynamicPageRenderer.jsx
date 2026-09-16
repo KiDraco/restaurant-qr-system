@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ChevronLeft, UtensilsCrossed, Bell, Receipt, DollarSign, Search, ShoppingCart, Star, X, Loader2, Menu as MenuIcon, Check } from 'lucide-react';
+import { PAGE_DIMENSIONS } from '../../hooks/useCanvas';
 
 const API_URL = '/api';
 
@@ -37,6 +38,13 @@ const BUTTON_SIZES = {
 };
 
 /**
+ * Merges element base style with extra styles into one object (avoids React duplicate-style bug)
+ */
+function mergeStyle(base, extra) {
+  return { ...base, ...extra };
+}
+
+/**
  * Renders a single element from canvas_json with dynamic data
  */
 export function DynamicElement({ 
@@ -53,7 +61,7 @@ export function DynamicElement({
   const { type, x, y, width, height, config = {}, visible = true } = element;
   if (!visible) return null;
 
-  const style = {
+  const baseStyle = {
     position: 'absolute',
     left: x,
     top: y,
@@ -67,7 +75,7 @@ export function DynamicElement({
   if (type === 'image') {
     const { src, alt = '', borderRadius = 0, opacity = 1, objectFit = 'cover' } = config;
     if (!src) return (
-      <div style={style} className="flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300" style={{ borderRadius }}>
+      <div style={{ ...baseStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6', border: '2px dashed #d1d5db', borderRadius }}>
         <span className="text-gray-400">📷</span>
       </div>
     );
@@ -75,7 +83,7 @@ export function DynamicElement({
       <img 
         src={src} 
         alt={alt}
-        style={{ ...style, width: '100%', height: '100%', objectFit, borderRadius, opacity }}
+        style={{ ...baseStyle, width: '100%', height: '100%', objectFit, borderRadius, opacity, display: 'block' }}
       />
     );
   }
@@ -83,7 +91,7 @@ export function DynamicElement({
   if (type === 'text') {
     const { content = '', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'normal', color = '#2A2A2A', textAlign = 'left', lineHeight = 1.5 } = config;
     return (
-      <div style={style} className="flex items-center" style={{ fontFamily, fontSize, fontWeight, color, textAlign, lineHeight }}>
+      <div style={{ ...baseStyle, fontFamily, fontSize, fontWeight, color, textAlign, lineHeight, display: 'flex', alignItems: 'center' }}>
         <div style={{ width: '100%', whiteSpace: 'pre-wrap' }}>{content}</div>
       </div>
     );
@@ -92,7 +100,7 @@ export function DynamicElement({
   if (type === 'category') {
     const { title = '', fontFamily = 'system-ui', fontSize = 20, fontWeight = 'bold', color = '#2A2A2A', textAlign = 'left', separator = true, separatorColor = '#FF6B6B', separatorWidth = 2 } = config;
     return (
-      <div style={style} className="flex flex-col" style={{ fontFamily, fontSize, fontWeight, color, textAlign }}>
+      <div style={{ ...baseStyle, fontFamily, fontSize, fontWeight, color, textAlign, display: 'flex', flexDirection: 'column' }}>
         <div style={{ width: '100%' }}>{title}</div>
         {separator && <div style={{ width: '100%', height: separatorWidth, backgroundColor: separatorColor, marginTop: 8 }} />}
       </div>
@@ -100,10 +108,9 @@ export function DynamicElement({
   }
 
   if (type === 'product') {
-    // Static product display (for preview only)
     const { name = 'Producto', description = '', price = '$0.00', nameFont = 'system-ui', nameSize = 16, nameWeight = 'semibold', nameColor = '#2A2A2A', descFont = 'system-ui', descSize = 13, descColor = '#666666', priceFont = 'system-ui', priceSize = 16, priceWeight = 'bold', priceColor = '#FF6B6B', layout = 'horizontal', spacing = 16 } = config;
     return (
-      <div style={style} style={{ fontFamily: nameFont }} className={layout === 'horizontal' ? 'flex items-center justify-between' : 'flex flex-col items-start'}>
+      <div style={{ ...baseStyle, fontFamily: nameFont, display: layout === 'horizontal' ? 'flex' : 'flex', flexDirection: layout === 'horizontal' ? 'row' : 'column', alignItems: layout === 'horizontal' ? 'center' : 'flex-start', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: nameSize, fontWeight: nameWeight, color: nameColor }}>{name}</div>
           {description && <div style={{ fontFamily: descFont, fontSize: descSize, color: descColor, marginTop: 4 }}>{description}</div>}
@@ -116,17 +123,16 @@ export function DynamicElement({
   if (type === 'separator') {
     const { color = '#FF6B6B', width: w = 2, style: lineStyle = 'solid', length = '100%' } = config;
     return (
-      <div style={style} className="flex items-center">
+      <div style={{ ...baseStyle, display: 'flex', alignItems: 'center' }}>
         <div style={{ width: length, height: w, backgroundColor: color, borderStyle: lineStyle }} />
       </div>
     );
   }
 
   if (type === 'decorative') {
-    // Simple decorative placeholder
     const { color = '#FF6B6B', width: w = 48, height: h = 48 } = config;
     return (
-      <div style={style} className="flex items-center justify-center" style={{ color }}>
+      <div style={{ ...baseStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', color }}>
         <svg width={w} height={h} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
@@ -137,12 +143,12 @@ export function DynamicElement({
   if (type === 'logo') {
     const { src, alt = 'Logo', width: w = 120, height: h = 120, borderRadius = 0, opacity = 1 } = config;
     if (!src) return (
-      <div style={style} className="flex items-center justify-center bg-gray-100" style={{ borderRadius }}>
+      <div style={{ ...baseStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9', borderRadius }}>
         <span className="text-4xl">🏷️</span>
       </div>
     );
     return (
-      <img src={src} alt={alt} style={{ ...style, width: w, height: h, borderRadius, opacity }} />
+      <img src={src} alt={alt} style={{ ...baseStyle, width: w, height: h, borderRadius, opacity }} />
     );
   }
 
@@ -162,7 +168,7 @@ export function DynamicElement({
 
     if (layout === 'grid') {
       return (
-        <div style={style} className="grid grid-cols-2 gap-4 p-4" style={{ maxHeight: height, overflow: 'auto' }}>
+        <div style={{ ...baseStyle, maxHeight: height, overflow: 'auto' }} className="grid grid-cols-2 gap-4 p-4">
           {menuItems.map(item => (
             <div key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm">
               {showProductImage && item.image_url && (
@@ -181,7 +187,7 @@ export function DynamicElement({
 
     // List layout (default)
     return (
-      <div style={style} className="space-y-4 p-4" style={{ maxHeight: height, overflow: 'auto' }}>
+      <div style={{ ...baseStyle, maxHeight: height, overflow: 'auto' }} className="space-y-4 p-4">
         {categories.map(cat => {
           const items = itemsByCategory[cat] || [];
           if (items.length === 0) return null;
@@ -216,12 +222,12 @@ export function DynamicElement({
     const [activeTab, setActiveTab] = useState(categories[0] || 'all');
     
     return (
-      <div style={style} style={{ fontFamily }}>
+      <div style={{ ...baseStyle, fontFamily }}>
         <div className="flex gap-2 overflow-x-auto pb-2" style={{ paddingBottom: 8 }}>
           <button
             onClick={() => setActiveTab('all')}
-            className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${activeTab === 'all' ? 'text-white' : 'text-gray-600'} ${activeTab === 'all' ? `bg-[${activeBackgroundColor}]` : `bg-[${backgroundColor}]`}`}
-            style={{ fontSize, fontWeight, color: activeTab === 'all' ? activeColor : inactiveColor, borderRadius }}
+            className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${activeTab === 'all' ? 'text-white' : 'text-gray-600'}`}
+            style={{ fontSize, fontWeight, color: activeTab === 'all' ? activeColor : inactiveColor, borderRadius, backgroundColor: activeTab === 'all' ? activeBackgroundColor : backgroundColor }}
           >
             Todos
           </button>
@@ -229,8 +235,8 @@ export function DynamicElement({
             <button
               key={cat}
               onClick={() => setActiveTab(cat)}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${activeTab === cat ? 'text-white' : 'text-gray-600'} ${activeTab === cat ? `bg-[${activeBackgroundColor}]` : `bg-[${backgroundColor}]`}`}
-              style={{ fontSize, fontWeight, color: activeTab === cat ? activeColor : inactiveColor, borderRadius }}
+              className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${activeTab === cat ? 'text-white' : 'text-gray-600'}`}
+              style={{ fontSize, fontWeight, color: activeTab === cat ? activeColor : inactiveColor, borderRadius, backgroundColor: activeTab === cat ? activeBackgroundColor : backgroundColor }}
             >
               {cat}
             </button>
@@ -246,7 +252,7 @@ export function DynamicElement({
     const formatPrice = (price) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(price || 0);
 
     return (
-      <div style={style} className="space-y-3 p-4" style={{ maxHeight: height, overflow: 'auto' }}>
+      <div style={{ ...baseStyle, maxHeight: height, overflow: 'auto' }} className="space-y-3 p-4">
         {orders.length === 0 ? (
           <div className="text-center py-8 text-gray-500">No hay órdenes registradas</div>
         ) : (
@@ -282,7 +288,7 @@ export function DynamicElement({
   if (type === 'table-number') {
     const { prefix = 'Mesa ', fontFamily = 'system-ui', fontSize = 32, fontWeight = 'bold', color = '#2A2A2A', textAlign = 'center' } = config;
     return (
-      <div style={style} className="flex items-center justify-center" style={{ fontFamily, fontSize, fontWeight, color, textAlign }}>
+      <div style={{ ...baseStyle, fontFamily, fontSize, fontWeight, color, textAlign, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span>{prefix}{tableNumber || '—'}</span>
       </div>
     );
@@ -293,7 +299,7 @@ export function DynamicElement({
     const total = billData?.totalAmount || 0;
     const formatted = showCurrency ? new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(total) : total.toString();
     return (
-      <div style={style} className="flex items-center justify-center" style={{ fontFamily, fontSize, fontWeight, color, textAlign }}>
+      <div style={{ ...baseStyle, fontFamily, fontSize, fontWeight, color, textAlign, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span>{prefix}{formatted}</span>
       </div>
     );
@@ -311,7 +317,7 @@ export function DynamicElement({
     };
 
     return (
-      <div style={style} className={fullWidth ? 'w-full' : 'inline-flex'}>
+      <div style={{ ...baseStyle, width: fullWidth ? '100%' : 'auto', display: 'inline-flex' }}>
         <button
           onClick={handleClick}
           className={`${variantClass} ${sizeClass} rounded-xl font-semibold flex items-center justify-center gap-2 w-full transition-all duration-200`}
@@ -330,7 +336,7 @@ export function DynamicElement({
     const [query, setQuery] = useState('');
 
     return (
-      <div style={style} style={{ fontFamily }}>
+      <div style={{ ...baseStyle, fontFamily }}>
         <div className="relative">
           {showIcon && <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><Search className="w-5 h-5" /></div>}
           <input
@@ -365,7 +371,7 @@ export function DynamicElement({
     const formatPrice = (price) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(price || 0);
 
     return (
-      <div style={style} className="flex items-center justify-between p-3" style={{ fontFamily, fontSize, fontWeight, color, backgroundColor, borderColor, borderRadius, borderWidth: 1, borderStyle: 'solid' }}>
+      <div style={{ ...baseStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px' }} className="flex items-center justify-between p-3" >
         <div className="flex items-center gap-2">
           {showItemCount && <span className="bg-amber-500 text-white rounded-full px-2 py-0.5 text-xs">{itemCount}</span>}
           {showTotal && <span className="font-bold" style={{ fontSize }}>{formatPrice(total)}</span>}
@@ -381,7 +387,7 @@ export function DynamicElement({
     if (activePromos.length === 0) return null;
 
     return (
-      <div style={style} className="p-4 rounded-xl" style={{ fontFamily, fontSize, fontWeight, color, backgroundColor, borderRadius }}>
+      <div style={{ ...baseStyle, fontFamily, fontSize, fontWeight, color, backgroundColor, borderRadius, padding: '16px' }} className="p-4 rounded-xl">
         {showTitle && <div className="mb-2">{title}</div>}
         <div className="space-y-2">
           {activePromos.map(promo => (
@@ -398,7 +404,7 @@ export function DynamicElement({
 
   // Unknown type fallback
   return (
-    <div style={style} className="flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 text-gray-500 text-xs">
+    <div style={baseStyle} className="flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 text-gray-500 text-xs">
       {type}
     </div>
   );
@@ -424,14 +430,32 @@ export function DynamicPageRenderer({
   const { elements = [], config = {} } = page;
   const background = config.background_config || { type: 'color', value: '#FFFFFF' };
   const format = config.page_format || 'mobile-portrait';
+  const pageDims = PAGE_DIMENSIONS[format] || PAGE_DIMENSIONS['mobile-portrait'];
 
-  // Background style
-  const backgroundStyle = useMemo(() => {
+  // Calculate scale to fit page in viewport
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const updateScale = () => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const padW = 20; // padding from outer wrapper
+      const padH = 20;
+      const s1 = (vw - padW) / pageDims.width;
+      const s2 = (vh - padH) / pageDims.height;
+      setScale(Math.min(s1, s2, 1));
+    };
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, [pageDims.width, pageDims.height]);
+
+  // Background style object
+  const backgroundStyleObj = useMemo(() => {
     switch (background.type) {
       case 'gradient':
         return { background: `linear-gradient(135deg, ${background.value?.from || '#FF6B6B'}, ${background.value?.to || '#4ECDC4'})` };
       case 'image':
-        return { backgroundImage: `url(${background.value})`, backgroundSize: 'cover', backgroundPosition: 'center' };
+        return { backgroundImage: `url(${background.value})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' };
       case 'color':
       default:
         return { backgroundColor: background.value || '#FFFFFF' };
@@ -451,9 +475,21 @@ export function DynamicPageRenderer({
     }
   }, [globalConfig]);
 
+  // Container style — single style object, no duplicates
+  const containerStyle = useMemo(() => ({
+    width: pageDims.width,
+    height: pageDims.height,
+    transform: `scale(${scale})`,
+    transformOrigin: 'top left',
+    margin: '0 auto',
+    position: 'relative',
+    background: backgroundStyleObj.background || backgroundStyleObj.backgroundColor || backgroundStyleObj.backgroundImage || '#FFFFFF',
+    overflow: 'hidden',
+  }), [scale, pageDims, backgroundStyleObj]);
+
   return (
-    <div className="min-h-screen" style={{ ...backgroundStyle, fontFamily: globalConfig.font_family || 'system-ui' }}>
-      <div className="relative" style={{ width: '100%', minHeight: '100vh' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#f3f4f6', padding: '10px' }}>
+      <div className="relative" style={containerStyle}>
         {elements.map((element, index) => (
           <DynamicElement
             key={`${element.id}-${index}`}
