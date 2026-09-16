@@ -431,7 +431,7 @@ export function DynamicElement({
   }
 
   if (type === 'action-button') {
-    const { action = 'viewMenu', label, icon = 'utensils', variant = 'primary', size = 'lg', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'semibold', borderRadius = 12 } = config;
+    const { action = 'viewMenu', label, icon = 'utensils', variant = 'primary', size = 'lg', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'semibold', borderRadius = 12, buttonColor } = config;
     const btnLabel = label || ACTION_LABELS[action] || 'Acción';
     const btnIcon = ACTION_ICONS[icon] || ACTION_ICONS.utensils;
     const variantClass = BUTTON_VARIANTS[variant] || BUTTON_VARIANTS.primary;
@@ -441,12 +441,14 @@ export function DynamicElement({
       onAction?.('button', action);
     };
 
+    const btnStyle = buttonColor ? { backgroundColor: buttonColor } : {};
+
     return (
       <div style={{ ...baseStyle, display: 'flex' }}>
         <button
           onClick={handleClick}
           className={`${variantClass} ${sizeClass} rounded-xl font-semibold flex items-center justify-center gap-2 w-full transition-all duration-200`}
-          style={{ fontFamily, fontSize, fontWeight, borderRadius }}
+          style={{ fontFamily, fontSize, fontWeight, borderRadius, ...btnStyle }}
           disabled={!onAction}
         >
           {btnIcon}
@@ -503,7 +505,7 @@ export function DynamicElement({
   }
 
   if (type === 'table-input') {
-    const { placeholder = 'N° de mesa', buttonLabel = 'Entrar', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'normal', color = '#2A2A2A', backgroundColor = '#FFFFFF', borderColor = '#E5E5E5', borderRadius = 12, buttonVariant = 'primary' } = config;
+    const { placeholder = 'N° de mesa', buttonLabel = 'Entrar', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'normal', color = '#2A2A2A', backgroundColor = '#FFFFFF', borderColor = '#E5E5E5', borderRadius = 12, buttonVariant = 'primary', buttonColor } = config;
     const variantClass = BUTTON_VARIANTS[buttonVariant] || BUTTON_VARIANTS.primary;
     const mergedStyle = {
       ...baseStyle,
@@ -540,7 +542,7 @@ export function DynamicElement({
         <button
           onClick={() => onAction?.('submitTable', tableInputValue)}
           className={`${variantClass} px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex-shrink-0`}
-          style={{ fontFamily, fontSize, fontWeight, borderRadius }}
+          style={{ fontFamily, fontSize, fontWeight, borderRadius, ...(buttonColor ? { backgroundColor: buttonColor } : {}) }}
         >
           {buttonLabel}
         </button>

@@ -1470,6 +1470,35 @@ export function ElementPropertiesPanel({
             optionLabel={(v) => v}
             onChange={(v) => handleConfigChange('buttonVariant', v)}
           />
+          <ColorInput
+            label="Color del botón"
+            value={{ hex: config.buttonColor || config.color || '#FFFFFF', opacity: 1 }}
+            onChange={(v) => handleConfigChange('buttonColor', v.hex)}
+          />
+          <SectionTitle title="Paleta de botones" />
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Azul claro', color: '#93C5FD' },
+              { label: 'Azul', color: '#3B82F6' },
+              { label: 'Azul oscuro', color: '#1E40AF' },
+              { label: 'Celeste', color: '#0EA5E9' },
+              { label: 'Verde', color: '#22C55E' },
+              { label: 'Tónico', color: '#8B5CF6' },
+              { label: 'Rojo', color: '#EF4444' },
+              { label: 'Gris', color: '#64748B' },
+            ].map(({ label, color }) => (
+              <button
+                key={color}
+                type="button"
+                aria-label={`Aplicar color ${label} al botón`}
+                onClick={() => { handleConfigChange('buttonVariant', 'primary'); handleConfigChange('buttonColor', color); }}
+                style={{
+                  width: 32, height: 32, borderRadius: 8, border: config.buttonColor === color && config.buttonVariant === 'primary' ? '2px solid #1E293B' : '1px solid #d1d5db',
+                  backgroundColor: color, cursor: 'pointer', opacity: config.buttonColor === color ? 1 : 0.6,
+                }}
+              />
+            ))}
+          </div>
         </>
       )}
     </div>
