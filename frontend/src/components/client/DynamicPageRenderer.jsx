@@ -204,6 +204,50 @@ export function DynamicElement({
 
     const formatMenuPrice = (price) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(price || 0);
 
+    const qtyOf = (id) => cart.items.find((i) => i.id === id)?.quantity || 0;
+
+    const stepperBtn = {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: '#F3F4F6',
+      color: '#2A2A2A',
+    };
+
+    // Qty stepper shown right next to each item: Pedir (qty 0) or trash + [-] n [+] (qty > 0)
+    const renderStepper = (item, align = 'flex-end') => {
+      const qty = qtyOf(item.id);
+      if (qty === 0) {
+        return (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleOrder(item); }}
+            disabled={pendingId === item.id}
+            className="mt-1 px-4 py-2 rounded-lg bg-[var(--theme-primary)] text-white font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {pendingId === item.id && <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+            <span>Pedir</span>
+          </button>
+        );
+      }
+      return (
+        <div className="flex items-center gap-1 mt-1" style={{ justifyContent: align }} onClick={(e) => e.stopPropagation()}>
+          <button type="button" aria-label="Quitar del pedido" onClick={() => onAction?.('cartRemove', item.id)} style={{ ...stepperBtn, backgroundColor: '#FEF2F2', color: '#DC2626' }}>
+            <Trash2 className="w-4 h-4" />
+          </button>
+          <button type="button" aria-label="Quitar uno" onClick={() => onAction?.('cartDec', item.id)} style={stepperBtn}>
+            <Minus className="w-4 h-4" />
+          </button>
+          <span className="font-bold text-gray-800 text-center" style={{ minWidth: 22, fontSize: productNameSize }}>{qty}</span>
+          <button type="button" aria-label="Agregar uno" onClick={() => onAction?.('order', item)} style={stepperBtn}>
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+      );
+    };
+
     if (filteredMenuItems.length === 0) {
       return (
         <div style={{ ...baseStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
@@ -224,14 +268,7 @@ export function DynamicElement({
                 <div className="font-semibold text-gray-800" style={{ fontSize: productNameSize, fontWeight: productNameWeight, color: productNameColor }}>{item.name}</div>
                 {showProductDescription && item.description && <div className="text-sm text-gray-500 mt-1" style={{ fontSize: productDescSize, color: productDescColor }}>{item.description}</div>}
                 {showPrice && <div className="mt-2 font-bold" style={{ fontSize: productPriceSize, fontWeight: productPriceWeight, color: productPriceColor }}>{formatMenuPrice(item.price)}</div>}
-                <button
-                  onClick={() => handleOrder(item)}
-                  disabled={pendingId === item.id}
-                  className="mt-3 px-4 py-2 rounded-lg bg-[var(--theme-primary)] text-white font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
-                >
-                  {pendingId === item.id && <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                  <span>Pedir</span>
-                </button>
+                {renderStepper(item, 'center')}
               </div>
             </div>
           ))}
@@ -254,7 +291,7 @@ export function DynamicElement({
                 </div>
               )}
               {items.map(item => (
-                <div key={item.id} className="flex gap-3 p-2 bg-white rounded-lg shadow-sm" onClick={() => onAction?.('order', item)}>
+                <div key={item.id} className="flex gap-3 p-2 bg-white rounded-lg shadow-sm" onClick={() => handleOrder(item)}>
                   {showProductImage && item.image_url && (
                     <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-lg flex-shrink-0" style={{ borderRadius: productImageRadius }} />
                   )}
@@ -262,6 +299,9 @@ export function DynamicElement({
                     <div className="font-semibold text-gray-800 truncate" style={{ fontSize: productNameSize, fontWeight: productNameWeight, color: productNameColor }}>{item.name}</div>
                     {showProductDescription && item.description && <div className="text-sm text-gray-500 mt-1 truncate" style={{ fontSize: productDescSize, color: productDescColor }}>{item.description}</div>}
                     {showPrice && <div className="mt-1 font-bold" style={{ fontSize: productPriceSize, fontWeight: productPriceWeight, color: productPriceColor }}>{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.price)}</div>}
+                  </div>
+                  <div className="flex flex-col items-end justify-center flex-shrink-0">
+                    {renderStepper(item)}
                   </div>
                 </div>
               ))}
