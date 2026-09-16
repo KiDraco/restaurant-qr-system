@@ -74,7 +74,7 @@ export function DynamicElement({
       <img 
         src={src} 
         alt={alt}
-        style={{ ...baseStyle, width: '100%', height: '100%', objectFit, borderRadius, opacity, display: 'block' }}
+        style={{ ...baseStyle, objectFit, borderRadius, opacity, display: 'block' }}
       />
     );
   }
@@ -297,7 +297,7 @@ export function DynamicElement({
   }
 
   if (type === 'action-button') {
-    const { action = 'viewMenu', label, icon = 'utensils', variant = 'primary', size = 'lg', fullWidth = true, fontFamily = 'system-ui', fontSize = 16, fontWeight = 'semibold', borderRadius = 12 } = config;
+    const { action = 'viewMenu', label, icon = 'utensils', variant = 'primary', size = 'lg', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'semibold', borderRadius = 12 } = config;
     const btnLabel = label || ACTION_LABELS[action] || 'Acción';
     const btnIcon = ACTION_ICONS[icon] || ACTION_ICONS.utensils;
     const variantClass = BUTTON_VARIANTS[variant] || BUTTON_VARIANTS.primary;
@@ -308,7 +308,7 @@ export function DynamicElement({
     };
 
     return (
-      <div style={{ ...baseStyle, width: fullWidth ? '100%' : 'auto', display: 'inline-flex' }}>
+      <div style={{ ...baseStyle, display: 'flex' }}>
         <button
           onClick={handleClick}
           className={`${variantClass} ${sizeClass} rounded-xl font-semibold flex items-center justify-center gap-2 w-full transition-all duration-200`}
