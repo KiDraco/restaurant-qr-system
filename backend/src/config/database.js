@@ -127,11 +127,11 @@ async function initializeDatabase() {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`);
       try { await db.execute('CREATE INDEX IF NOT EXISTS idx_themes_name_lower ON themes (lower(name))'); } catch (_) {}
-      const existing = await db.execute("SELECT COUNT(*) AS count FROM themes WHERE name = 'Clasico Centrado'");
+      // Seed ONLY on a fresh DB. Never delete: a name-based guard with mismatched
+      // accents used to reseed (and wipe user themes) on every cold start.
+      const existing = await db.execute('SELECT COUNT(*) AS count FROM themes');
       if (Number(existing.rows[0].count) === 0) {
         console.log('⚡ Seeding 5 themes...');
-        // Cleanup total: borra todos los themes existentes y recrea los 5 templates
-        await db.execute('DELETE FROM themes');
         const themes = [
           {
             name: 'Clásico Centrado',
@@ -155,7 +155,7 @@ async function initializeDatabase() {
               { id: 'e3', type: 'category', x: 50, y: 500, width: 694, height: 80, zIndex: 3, config: { label: 'Carta', fontSize: 18, color: '#7f8c8d' }, locked: false, visible: true },
               { id: 'e4', type: 'text', x: 50, y: 610, width: 694, height: 200, zIndex: 4, config: { content: '• Ensalada César\n• Pasta Fresca\n• Café de especialidad', fontSize: 14, color: '#888' }, locked: false, visible: true },
             ], page_format: 'A4-portrait', background_config: { type: 'color', value: '#FFFFFF' } }),
-            is_active: true,
+            is_active: false,
             is_default: false,
             background_config: { type: 'color', value: '#FFFFFF' },
           },
@@ -208,6 +208,33 @@ async function initializeDatabase() {
         console.log('✅ 5 themes seeded');
       }
     } catch (e) { console.error('⚠️ Migración themes falló:', e.message || e); }
+
+    // Migración: deduplicar themes por nombre (el seed con guard por nombre
+    // acentuado generaba filas duplicadas en arranques concurrentes).
+    // Conserva: fila activa > canvas más grande (personalizado) > id menor.
+    try {
+      const rows = await db.execute('SELECT id, name, is_active, length(canvas_json) AS clen FROM themes');
+      const byName = {};
+      for (const r of rows.rows) {
+        (byName[r.name] = byName[r.name] || []).push(r);
+      }
+      for (const [name, group] of Object.entries(byName)) {
+        if (group.length < 2) continue;
+        group.sort((a, b) =>
+          ((b.is_active ? 1 : 0) - (a.is_active ? 1 : 0)) ||
+          ((b.clen || 0) - (a.clen || 0)) ||
+          (a.id - b.id)
+        );
+        const keeper = group[0];
+        if (!keeper.is_active && group.some((r) => r.is_active)) {
+          await db.execute({ sql: 'UPDATE themes SET is_active = 1 WHERE id = ?', args: [keeper.id] });
+        }
+        for (const dup of group.slice(1)) {
+          await db.execute({ sql: 'DELETE FROM themes WHERE id = ?', args: [dup.id] });
+        }
+        console.log(`    🧹 "${name}": ${group.length - 1} duplicado(s) eliminado(s), se conserva id=${keeper.id}`);
+      }
+    } catch (e) { console.error('⚠️ Migración dedup themes falló:', e.message || e); }
 
     // Migración: agregar campos de canvas a themes existentes
     try { await db.execute('ALTER TABLE themes ADD COLUMN canvas_json TEXT DEFAULT NULL'); } catch (_) {}
