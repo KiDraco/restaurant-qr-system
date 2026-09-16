@@ -405,72 +405,6 @@ export function ElementPropertiesPanel({
           step={4}
           unit="px"
         />
-      {type === 'table-input' && (
-        <>
-          <TextInput
-            label="Texto de ayuda"
-            value={config.placeholder || 'N° de mesa'}
-            onChange={(v) => handleConfigChange('placeholder', v)}
-            placeholder="N° de mesa"
-          />
-          <TextInput
-            label="Texto del botón"
-            value={config.buttonLabel || 'Entrar'}
-            onChange={(v) => handleConfigChange('buttonLabel', v)}
-            placeholder="Entrar"
-          />
-          <SelectInput
-            label="Fuente"
-            value={config.fontFamily || 'system-ui'}
-            options={FONT_FAMILIES}
-            optionLabel={opt => opt}
-            onChange={(v) => handleConfigChange('fontFamily', v)}
-          />
-          <NumberInput
-            label="Tamaño"
-            value={config.fontSize || 16}
-            onChange={(v) => handleConfigChange('fontSize', v)}
-            min={12}
-            max={24}
-          />
-          <SelectInput
-            label="Peso"
-            value={config.fontWeight || 'normal'}
-            options={FONT_WEIGHTS}
-            optionLabel={opt => opt}
-            onChange={(v) => handleConfigChange('fontWeight', v)}
-          />
-          <ColorInput
-            label="Color texto"
-            value={{ hex: config.color || '#2A2A2A', opacity: 1 }}
-            onChange={(v) => handleConfigChange('color', v.hex)}
-          />
-          <ColorInput
-            label="Color fondo"
-            value={{ hex: config.backgroundColor || '#FFFFFF', opacity: 1 }}
-            onChange={(v) => handleConfigChange('backgroundColor', v.hex)}
-          />
-          <ColorInput
-            label="Color borde"
-            value={{ hex: config.borderColor || '#E5E5E5', opacity: 1 }}
-            onChange={(v) => handleConfigChange('borderColor', v.hex)}
-          />
-          <NumberInput
-            label="Radio de borde"
-            value={config.borderRadius ?? 12}
-            onChange={(v) => handleConfigChange('borderRadius', v)}
-            min={0}
-            max={50}
-          />
-          <SelectInput
-            label="Variante del botón"
-            value={config.buttonVariant || 'primary'}
-            options={['primary', 'secondary', 'outline', 'ghost']}
-            optionLabel={(v) => v}
-            onChange={(v) => handleConfigChange('buttonVariant', v)}
-          />
-        </>
-      )}
     </div>
   );
 }
@@ -1385,6 +1319,72 @@ export function ElementPropertiesPanel({
             onChange={(v) => handleConfigChange('borderRadius', v)}
             min={0}
             max={50}
+          />
+        </>
+      )}
+      {type === 'table-input' && (
+        <>
+          <TextInput
+            label="Texto de ayuda"
+            value={config.placeholder || 'N° de mesa'}
+            onChange={(v) => handleConfigChange('placeholder', v)}
+            placeholder="N° de mesa"
+          />
+          <TextInput
+            label="Texto del botón"
+            value={config.buttonLabel || 'Entrar'}
+            onChange={(v) => handleConfigChange('buttonLabel', v)}
+            placeholder="Entrar"
+          />
+          <SelectInput
+            label="Fuente"
+            value={config.fontFamily || 'system-ui'}
+            options={FONT_FAMILIES}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontFamily', v)}
+          />
+          <NumberInput
+            label="Tamaño"
+            value={config.fontSize || 16}
+            onChange={(v) => handleConfigChange('fontSize', v)}
+            min={12}
+            max={24}
+          />
+          <SelectInput
+            label="Peso"
+            value={config.fontWeight || 'normal'}
+            options={FONT_WEIGHTS}
+            optionLabel={opt => opt}
+            onChange={(v) => handleConfigChange('fontWeight', v)}
+          />
+          <ColorInput
+            label="Color texto"
+            value={{ hex: config.color || '#2A2A2A', opacity: 1 }}
+            onChange={(v) => handleConfigChange('color', v.hex)}
+          />
+          <ColorInput
+            label="Color fondo"
+            value={{ hex: config.backgroundColor || '#FFFFFF', opacity: 1 }}
+            onChange={(v) => handleConfigChange('backgroundColor', v.hex)}
+          />
+          <ColorInput
+            label="Color borde"
+            value={{ hex: config.borderColor || '#E5E5E5', opacity: 1 }}
+            onChange={(v) => handleConfigChange('borderColor', v.hex)}
+          />
+          <NumberInput
+            label="Radio de borde"
+            value={config.borderRadius ?? 12}
+            onChange={(v) => handleConfigChange('borderRadius', v)}
+            min={0}
+            max={50}
+          />
+          <SelectInput
+            label="Variante del botón"
+            value={config.buttonVariant || 'primary'}
+            options={['primary', 'secondary', 'outline', 'ghost']}
+            optionLabel={(v) => v}
+            onChange={(v) => handleConfigChange('buttonVariant', v)}
           />
         </>
       )}
