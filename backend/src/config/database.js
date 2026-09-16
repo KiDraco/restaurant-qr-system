@@ -300,7 +300,9 @@ async function initializeDatabase() {
             { id: crypto.randomUUID(), type: 'search-bar', x: 10, y: 112, width: 355, height: 44, zIndex: 2, locked: false, visible: true, config: { placeholder: 'Buscar platos...' } },
             { id: crypto.randomUUID(), type: 'menu-list', x: 10, y: 164, width: 355, height: 410, zIndex: 3, locked: false, visible: true, config: { layout: 'list', showCategoryTitle: true, showProductImage: true, showPrice: true } },
             { id: crypto.randomUUID(), type: 'cart-summary', x: 10, y: 582, width: 355, height: 60, zIndex: 4, locked: false, visible: true, config: { showItemCount: true, showTotal: true } },
-          ].concat(legacyElements.map((el, i) => ({ ...el, zIndex: 5 + i }))), config: { page_format: 'mobile-portrait', background_config: t.background_config ? JSON.parse(t.background_config) : { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } } },
+          ].concat(legacyElements.map((el, i) => ({ ...el, zIndex: 5 + i }))).concat([
+            { id: crypto.randomUUID(), type: 'cart-panel', x: 0, y: 0, width: 375, height: 667, zIndex: 50, locked: false, visible: true, config: { title: 'Tu pedido', confirmLabel: 'Confirmar pedido', emptyText: 'Tu pedido está vacío', backgroundColor: '#FFFFFF', borderRadius: 16, confirmBackgroundColor: '#FF6B6B', confirmTextColor: '#FFFFFF', textColor: '#2A2A2A', mutedColor: '#666666' } },
+          ]), config: { page_format: 'mobile-portrait', background_config: t.background_config ? JSON.parse(t.background_config) : { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } } },
           { id: 'bill', name: 'Cuenta', type: 'bill', icon: '🧾', elements: [
             { id: crypto.randomUUID(), type: 'text', x: 20, y: 16, width: 335, height: 36, zIndex: 0, locked: false, visible: true, config: { content: 'Cuenta Detallada', fontSize: 24, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
             { id: crypto.randomUUID(), type: 'table-number', x: 20, y: 60, width: 335, height: 32, zIndex: 1, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 20, textAlign: 'center' } },
@@ -419,6 +421,8 @@ async function initializeDatabase() {
             const kept = [];
             for (const el of menuPage.elements) {
               if (keepSet.has(el)) continue;
+              // Cart overlay covers the page by design; keep it untouched (hidden until opened)
+              if (el.type === 'cart-panel') { kept.push(el); continue; }
               const box = { x: num(el.x, 0), y: num(el.y, 0), width: num(el.width, 0), height: num(el.height, 0) };
               if (stackBoxes.some((s) => boxesOverlap(box, s)) || box.y + box.height > PH || box.x + box.width > PW) {
                 dirty = true; // drop overlapping / off-page strays (legacy concat leftovers)
@@ -433,6 +437,12 @@ async function initializeDatabase() {
             if (dirty) {
               [...present.map((t) => byType[t]), ...kept].forEach((el, i) => { el.zIndex = i; });
               menuPage.elements = [...present.map((t) => byType[t]), ...kept];
+              // Keep cart overlays on top (they stay hidden until opened)
+              const panels = menuPage.elements.filter((el) => el.type === 'cart-panel');
+              if (panels.length > 0) {
+                menuPage.elements = [...menuPage.elements.filter((el) => el.type !== 'cart-panel'), ...panels];
+                menuPage.elements.forEach((el, i) => { el.zIndex = i; });
+              }
             }
           }
         }
@@ -543,6 +553,8 @@ async function initializeDatabase() {
           let strayProblem = false;
           for (const el of menuPage.elements) {
             if (functionalSet.has(el)) continue;
+            // Cart overlay covers the page by design; never a stray problem
+            if (el.type === 'cart-panel') continue;
             const box = { x: num(el.x, 0), y: num(el.y, 0), width: num(el.width, 0), height: num(el.height, 0) };
             if (stackBoxes.some((s) => boxesOverlap(box, s)) || box.x + box.width > PAGE_W || box.y + box.height > PAGE_H) {
               strayProblem = true;
@@ -554,6 +566,8 @@ async function initializeDatabase() {
             const keptStrays = [];
             for (const el of menuPage.elements) {
               if (functionalSet.has(el)) continue;
+              // Preserve cart overlays; they stay hidden until opened
+              if (el.type === 'cart-panel') continue;
               const box = { x: num(el.x, 0), y: num(el.y, 0), width: num(el.width, 0), height: num(el.height, 0) };
               if (stackBoxes.some((s) => boxesOverlap(box, s)) || box.x + box.width > PAGE_W || box.y + box.height > PAGE_H) continue;
               keptStrays.push(el);
@@ -572,7 +586,10 @@ async function initializeDatabase() {
               rebuilt.push(el);
             });
             keptStrays.forEach((el, i) => { el.zIndex = rebuilt.length + i; });
-            menuPage.elements = [...rebuilt, ...keptStrays];
+            // Preserve existing cart overlays on top (hidden until opened, no restack needed)
+            const preservedPanels = menuPage.elements.filter((el) => el.type === 'cart-panel');
+            menuPage.elements = [...rebuilt, ...keptStrays, ...preservedPanels];
+            menuPage.elements.forEach((el, i) => { el.zIndex = i; });
             menuPage.config = { ...(menuPage.config || {}), page_format: 'mobile-portrait' };
             dirty = true;
             notes.push('menu: geometria canonica restaurada');
@@ -623,6 +640,49 @@ async function initializeDatabase() {
         }
       }
     } catch (e) { console.error('⚠️ Migración canonica pre-canvas falló:', e.message || e); }
+
+    // Migration: ensure every menu page has the cart-panel overlay (local-first cart).
+    // Overlay covers the full page but stays hidden until opened, so no restack needed.
+    try {
+      const PAGE_DIMS = {
+        'mobile-portrait': { width: 375, height: 667 },
+        'mobile-landscape': { width: 667, height: 375 },
+        'A4-portrait': { width: 794, height: 1123 },
+        'A4-landscape': { width: 1123, height: 794 },
+        Letter: { width: 816, height: 1056 },
+      };
+      const themes = await db.execute('SELECT id, name, canvas_json FROM themes');
+      for (const theme of themes.rows) {
+        if (!theme.canvas_json) continue;
+        let canvas = null;
+        try {
+          canvas = typeof theme.canvas_json === 'string' ? JSON.parse(theme.canvas_json) : theme.canvas_json;
+        } catch (_) { continue; }
+        if (!canvas || !Array.isArray(canvas.pages)) continue;
+        const menuPage = canvas.pages.find((p) => p.type === 'menu' || p.id === 'menu');
+        if (!menuPage || !Array.isArray(menuPage.elements)) continue;
+        if (!menuPage.elements.some((el) => el.type === 'menu-list')) continue;
+        if (menuPage.elements.some((el) => el.type === 'cart-panel')) continue;
+        const dims = PAGE_DIMS[menuPage.config?.page_format] || PAGE_DIMS['mobile-portrait'];
+        menuPage.elements.push({
+          id: crypto.randomUUID(),
+          type: 'cart-panel',
+          x: 0,
+          y: 0,
+          width: dims.width,
+          height: dims.height,
+          zIndex: menuPage.elements.length,
+          locked: false,
+          visible: true,
+          config: { title: 'Tu pedido', confirmLabel: 'Confirmar pedido', emptyText: 'Tu pedido está vacío', backgroundColor: '#FFFFFF', borderRadius: 16, confirmBackgroundColor: '#FF6B6B', confirmTextColor: '#FFFFFF', textColor: '#2A2A2A', mutedColor: '#666666' },
+        });
+        await db.execute({
+          sql: 'UPDATE themes SET canvas_json = ? WHERE id = ?',
+          args: [JSON.stringify(canvas), theme.id],
+        });
+        console.log(`    ✅ "${theme.name}" cart-panel agregado a la página menu`);
+      }
+    } catch (e) { console.error('⚠️ Migración cart-panel falló:', e.message || e); }
 
     console.log('✅ Tablas inicializadas correctamente');
   } catch (error) {

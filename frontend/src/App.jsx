@@ -79,6 +79,7 @@ function App() {
         { id: genId(), type: 'search-bar', x: 10, y: 112, width: 355, height: 44, zIndex: 2, locked: false, visible: true, config: { placeholder: 'Buscar platos...' } },
         { id: genId(), type: 'menu-list', x: 10, y: 164, width: 355, height: 410, zIndex: 3, locked: false, visible: true, config: { layout: 'list', showCategoryTitle: true, showProductImage: true, showProductDescription: true, showPrice: true } },
         { id: genId(), type: 'cart-summary', x: 10, y: 582, width: 355, height: 60, zIndex: 4, locked: false, visible: true, config: { showItemCount: true, showTotal: true } },
+        { id: genId(), type: 'cart-panel', x: 0, y: 0, width: 375, height: 667, zIndex: 5, locked: false, visible: true, config: { title: 'Tu pedido', confirmLabel: 'Confirmar pedido', emptyText: 'Tu pedido está vacío', backgroundColor: '#FFFFFF', borderRadius: 16, confirmBackgroundColor: '#FF6B6B', confirmTextColor: '#FFFFFF', textColor: '#2A2A2A', mutedColor: '#666666' } },
       ],
       config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } },
     },
@@ -248,50 +249,84 @@ function App() {
     }
   }, [tableNumber, showNotificationMsg]);
 
-  const handleCreateOrder = useCallback(async (menuItemId) => {
-    try {
-      const response = await fetch(`${API_URL}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          tableNumber: parseInt(tableNumber), 
-          menuItemId, 
-          quantity: 1 
-        })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        await fetchBill(tableNumber);
-        // Update cart locally for immediate feedback
-        const item = menuItems.find(i => i.id === menuItemId);
-        if (item) {
-          setCart(prev => {
-            const existing = prev.items.find(i => i.id === menuItemId);
-            if (existing) {
-              return {
-                items: prev.items.map(i => i.id === menuItemId ? { ...i, quantity: i.quantity + 1 } : i),
-                total: prev.total + item.price
-              };
-            }
-            return {
-              items: [...prev.items, { ...item, quantity: 1 }],
-              total: prev.total + item.price
-            };
-          });
-        }
-        showNotificationMsg('success', `${item?.name || 'Producto'} agregado al pedido`);
-        return { success: true, ...data };
-      } else {
-        const err = await response.json();
-        showNotificationMsg('error', err.error || 'Error al agregar');
-        return { success: false, error: err.error };
-      }
-    } catch (error) {
-      console.error('Error creando orden:', error);
-      showNotificationMsg('error', 'Error de conexión');
-      return { success: false, error: 'Error de conexión' };
+  // Local-first cart: totals always derive from lines (price * quantity)
+  const calcCartTotal = useCallback((items) => {
+    return items.reduce((sum, i) => sum + (Number(i.price) || 0) * (i.quantity || 1), 0);
+  }, []);
+
+  // Silent local add (no POST); cart-summary count updates as feedback
+  const addToCartLocal = useCallback((item) => {
+    if (!item || item.id === undefined || item.id === null) return;
+    setCart((prev) => {
+      const existing = prev.items.find((i) => i.id === item.id);
+      const items = existing
+        ? prev.items.map((i) => (i.id === item.id ? { ...i, quantity: (i.quantity || 1) + 1 } : i))
+        : [...prev.items, { ...item, quantity: 1 }];
+      return { items, total: calcCartTotal(items) };
+    });
+  }, [calcCartTotal]);
+
+  const handleCartInc = useCallback((itemId) => {
+    setCart((prev) => {
+      const items = prev.items.map((i) => (i.id === itemId ? { ...i, quantity: (i.quantity || 1) + 1 } : i));
+      return { items, total: calcCartTotal(items) };
+    });
+  }, [calcCartTotal]);
+
+  const handleCartDec = useCallback((itemId) => {
+    setCart((prev) => {
+      const items = prev.items
+        .map((i) => (i.id === itemId ? { ...i, quantity: (i.quantity || 1) - 1 } : i))
+        .filter((i) => (i.quantity || 0) > 0);
+      return { items, total: calcCartTotal(items) };
+    });
+  }, [calcCartTotal]);
+
+  const handleCartRemove = useCallback((itemId) => {
+    setCart((prev) => {
+      const items = prev.items.filter((i) => i.id !== itemId);
+      return { items, total: calcCartTotal(items) };
+    });
+  }, [calcCartTotal]);
+
+  // Confirm posts every line with its quantity (backend accepts quantity per order)
+  const handleConfirmCart = useCallback(async () => {
+    if (cart.items.length === 0) {
+      showNotificationMsg('error', 'Tu pedido está vacío');
+      setTimeout(() => setNotification(null), 3000);
+      return;
     }
-  }, [tableNumber, menuItems, fetchBill, showNotificationMsg]);
+    if (!tableNumber) {
+      showNotificationMsg('error', 'Falta el número de mesa');
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    try {
+      for (const line of cart.items) {
+        const response = await fetch(`${API_URL}/orders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tableNumber: parseInt(tableNumber),
+            menuItemId: line.id,
+            quantity: line.quantity || 1
+          })
+        });
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error || 'Error al confirmar el pedido');
+        }
+      }
+      await fetchBill(tableNumber);
+      setCart({ items: [], total: 0 });
+      showNotificationMsg('success', 'Pedido confirmado');
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      console.error('Error confirmando pedido:', error);
+      showNotificationMsg('error', error.message || 'Error de conexión');
+      setTimeout(() => setNotification(null), 3000);
+    }
+  }, [cart, tableNumber, fetchBill, showNotificationMsg]);
 
   const handleDynamicAction = useCallback(async (type, payload) => {
     switch (type) {
@@ -330,7 +365,25 @@ function App() {
         }
         break;
       case 'order':
-        handleCreateOrder(payload.id);
+        addToCartLocal(payload);
+        break;
+      case 'cartInc': {
+        const incId = payload && typeof payload === 'object' ? payload.id : payload;
+        handleCartInc(incId);
+        break;
+      }
+      case 'cartDec': {
+        const decId = payload && typeof payload === 'object' ? payload.id : payload;
+        handleCartDec(decId);
+        break;
+      }
+      case 'cartRemove': {
+        const removeId = payload && typeof payload === 'object' ? payload.id : payload;
+        handleCartRemove(removeId);
+        break;
+      }
+      case 'cartConfirm':
+        handleConfirmCart();
         break;
       case 'search':
         // Search is handled locally in the search-bar component
@@ -348,7 +401,7 @@ function App() {
         break;
       }
     }
-  }, [handleCallWaiter, handleRequestBill, handleCreateOrder, showNotificationMsg, startSession, showBill, showMenu, tableNumber, fetchBill]);
+  }, [handleCallWaiter, handleRequestBill, addToCartLocal, handleCartInc, handleCartDec, handleCartRemove, handleConfirmCart, showNotificationMsg, startSession, showBill, showMenu, tableNumber, fetchBill]);
 
   const handleViewBill = useCallback(async () => {
     await fetchBill(tableNumber);

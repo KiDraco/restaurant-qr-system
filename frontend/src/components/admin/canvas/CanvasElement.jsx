@@ -212,6 +212,35 @@ function PromoBannerPreview({ element, isSelected, isDragging, isResizing }) {
   );
 }
 
+function CartPanelPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  const sheetY = height * 0.3;
+  const sheetH = height - sheetY;
+  const rows = ['2x Pizza Margherita', '1x Coca Cola', '1x Flan Casero'];
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} fill="rgba(0,0,0,0.35)" rx={8} />
+      <rect x={0} y={sheetY} width={width} height={sheetH} fill={cfg.backgroundColor || '#FFFFFF'} rx={cfg.borderRadius || 16} />
+      <text x={16} y={sheetY + 24} fontSize={14} fontFamily="system-ui" fontWeight="bold" fill={cfg.textColor || '#2A2A2A'}>
+        {cfg.title || 'Tu pedido'}
+      </text>
+      {rows.map((row, i) => (
+        <g key={i} transform={`translate(16, ${sheetY + 44 + i * 30})`}>
+          <rect x={0} y={0} width={width - 120} height={12} fill="#E5E7EB" rx={4} />
+          <rect x={width - 96} y={-2} width={44} height={16} fill="#F3F4F6" rx={8} />
+          <rect x={width - 44} y={-2} width={28} height={16} fill="#FEF3C7" rx={4} />
+        </g>
+      ))}
+      <rect x={16} y={height - 48} width={width - 32} height={32} fill={cfg.confirmBackgroundColor || '#FF6B6B'} rx={12} />
+      <text x={width / 2} y={height - 27} textAnchor="middle" fontSize={13} fontFamily="system-ui" fontWeight="semibold" fill={cfg.confirmTextColor || '#FFFFFF'}>
+        {cfg.confirmLabel || 'Confirmar pedido'}
+      </text>
+      <text x={width/2} y={height + 14} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">[Carrito]</text>
+    </g>
+  );
+}
+
 const elementComponents = {
   image: ImageElement,
   text: TextElement,
@@ -229,6 +258,7 @@ const elementComponents = {
   'action-button': ActionButtonPreview,
   'search-bar': SearchBarPreview,
   'cart-summary': CartSummaryPreview,
+  'cart-panel': CartPanelPreview,
   'promo-banner': PromoBannerPreview,
   'table-input': TableInputPreview,
 };

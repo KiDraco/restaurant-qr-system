@@ -194,6 +194,18 @@ export const DEFAULT_ELEMENT_CONFIG = {
     borderColor: '#F5E6A0',
     borderRadius: 8,
   },
+  'cart-panel': {
+    // Full-page overlay with order lines, steppers and confirm button
+    title: 'Tu pedido',
+    confirmLabel: 'Confirmar pedido',
+    emptyText: 'Tu pedido está vacío',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    confirmBackgroundColor: '#FF6B6B',
+    confirmTextColor: '#FFFFFF',
+    textColor: '#2A2A2A',
+    mutedColor: '#666666',
+  },
   'promo-banner': {
     // Shows active promotions
     showTitle: true,

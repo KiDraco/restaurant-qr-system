@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronLeft, UtensilsCrossed, Bell, Receipt, DollarSign, Search, RotateCw, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, UtensilsCrossed, Bell, Receipt, DollarSign, Search, RotateCw, X, Minus, Plus, Trash2 } from 'lucide-react';
 import { PAGE_DIMENSIONS } from '../../hooks/useCanvas';
 
 // Icon mapping for action buttons
@@ -49,6 +49,8 @@ export function DynamicElement({
   promotions = [],
   cart = { items: [], total: 0 },
   onAction,
+  cartOpen = false,
+  onToggleCart,
   activeCategory = 'all',
   searchQuery = '',
   onCategoryChange,
@@ -483,10 +485,70 @@ export function DynamicElement({
     const formatPrice = (price) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(price || 0);
 
     return (
-      <div style={{ ...baseStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px' }} className="flex items-center justify-between p-3" >
+      <div style={{ ...baseStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, cursor: 'pointer', backgroundColor, borderColor, borderWidth: 1, borderStyle: 'solid', borderRadius, fontFamily, fontSize, fontWeight, color }} className="flex items-center justify-between p-3" onClick={() => onToggleCart?.()} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggleCart?.(); }}>
         <div className="flex items-center gap-2">
           {showItemCount && <span className="bg-amber-500 text-white rounded-full px-2 py-0.5 text-xs">{itemCount}</span>}
           {showTotal && <span className="font-bold" style={{ fontSize }}>{formatPrice(total)}</span>}
+        </div>
+        <div className="flex items-center gap-1 text-gray-500">
+          <span className="text-xs font-medium">Ver</span>
+          <ChevronRight className="w-4 h-4" />
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'cart-panel') {
+    // Overlay stays hidden until opened; renders inside its own box so canvas scale stays correct
+    if (!cartOpen) return null;
+    const { title = 'Tu pedido', confirmLabel = 'Confirmar pedido', emptyText = 'Tu pedido está vacío', backgroundColor = '#FFFFFF', borderRadius = 16, confirmBackgroundColor = '#FF6B6B', confirmTextColor = '#FFFFFF', textColor = '#2A2A2A', mutedColor = '#666666' } = config;
+    const lines = cart?.items || [];
+    const total = cart?.total || 0;
+    const formatPrice = (price) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(price || 0);
+    const listMaxHeight = Math.max(120, height - 260);
+
+    return (
+      <div style={{ ...baseStyle, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', overflow: 'hidden' }}>
+        <div style={{ backgroundColor, borderTopLeftRadius: borderRadius, borderTopRightRadius: borderRadius, display: 'flex', flexDirection: 'column', maxHeight: height - 60, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
+            <span style={{ fontSize: 18, fontWeight: 'bold', color: textColor }}>{title}</span>
+            <button type="button" aria-label="Cerrar" onClick={() => onToggleCart?.(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6', color: textColor }}>
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {lines.length === 0 ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, color: mutedColor, fontSize: 14 }}>{emptyText}</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 16, paddingRight: 16, overflowY: 'auto', maxHeight: listMaxHeight }}>
+              {lines.map((line) => (
+                <div key={line.id} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 8, paddingBottom: 8, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: '#F0F0F0' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 'semibold', color: textColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{line.name}</div>
+                    <div style={{ fontSize: 12, color: mutedColor }}>{formatPrice(line.price)} c/u</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button type="button" aria-label="Disminuir cantidad" onClick={() => onAction?.('cartDec', line.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 14, backgroundColor: '#F3F4F6', color: textColor }}>
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span style={{ fontSize: 14, fontWeight: 'bold', color: textColor, minWidth: 20, textAlign: 'center' }}>{line.quantity || 1}</span>
+                    <button type="button" aria-label="Aumentar cantidad" onClick={() => onAction?.('cartInc', line.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 14, backgroundColor: '#F3F4F6', color: textColor }}>
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 'bold', color: textColor, minWidth: 64, textAlign: 'right' }}>{formatPrice((Number(line.price) || 0) * (line.quantity || 1))}</div>
+                  <button type="button" aria-label="Quitar del pedido" onClick={() => onAction?.('cartRemove', line.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 14, backgroundColor: '#FEF2F2', color: '#DC2626' }}>
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+            <span style={{ fontSize: 16, fontWeight: 'bold', color: textColor }}>Total: {formatPrice(total)}</span>
+            <button type="button" onClick={() => { onAction?.('cartConfirm'); onToggleCart?.(false); }} disabled={lines.length === 0} style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 12, paddingBottom: 12, borderRadius: 12, backgroundColor: confirmBackgroundColor, color: confirmTextColor, fontSize: 15, fontWeight: 'semibold', opacity: lines.length === 0 ? 0.5 : 1 }}>
+              {confirmLabel}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -539,7 +601,12 @@ export function DynamicPageRenderer({
 }) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [cartOpen, setCartOpen] = useState(false);
   void pageConfig;
+
+  const handleToggleCart = useCallback((next) => {
+    setCartOpen((prev) => (typeof next === 'boolean' ? next : !prev));
+  }, []);
 
   const { elements = [], config = {} } = page || {};
   const background = config.background_config || { type: 'color', value: '#FFFFFF' };
@@ -618,6 +685,8 @@ export function DynamicPageRenderer({
             promotions={promotions}
             cart={cart}
             onAction={onAction}
+            cartOpen={cartOpen}
+            onToggleCart={handleToggleCart}
             activeCategory={activeCategory}
             searchQuery={searchQuery}
             onCategoryChange={setActiveCategory}

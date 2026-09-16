@@ -1269,6 +1269,61 @@ export function ElementPropertiesPanel({
         </>
       )}
 
+      {type === 'cart-panel' && (
+        <>
+          <TextInput
+            label="Título"
+            value={config.title || 'Tu pedido'}
+            onChange={(v) => handleConfigChange('title', v)}
+            placeholder="Tu pedido"
+          />
+          <TextInput
+            label="Texto del botón"
+            value={config.confirmLabel || 'Confirmar pedido'}
+            onChange={(v) => handleConfigChange('confirmLabel', v)}
+            placeholder="Confirmar pedido"
+          />
+          <TextInput
+            label="Texto vacío"
+            value={config.emptyText || 'Tu pedido está vacío'}
+            onChange={(v) => handleConfigChange('emptyText', v)}
+            placeholder="Tu pedido está vacío"
+          />
+          <ColorInput
+            label="Color fondo"
+            value={{ hex: config.backgroundColor || '#FFFFFF', opacity: 1 }}
+            onChange={(v) => handleConfigChange('backgroundColor', v.hex)}
+          />
+          <ColorInput
+            label="Color botón"
+            value={{ hex: config.confirmBackgroundColor || '#FF6B6B', opacity: 1 }}
+            onChange={(v) => handleConfigChange('confirmBackgroundColor', v.hex)}
+          />
+          <ColorInput
+            label="Color texto botón"
+            value={{ hex: config.confirmTextColor || '#FFFFFF', opacity: 1 }}
+            onChange={(v) => handleConfigChange('confirmTextColor', v.hex)}
+          />
+          <ColorInput
+            label="Color texto"
+            value={{ hex: config.textColor || '#2A2A2A', opacity: 1 }}
+            onChange={(v) => handleConfigChange('textColor', v.hex)}
+          />
+          <ColorInput
+            label="Color secundario"
+            value={{ hex: config.mutedColor || '#666666', opacity: 1 }}
+            onChange={(v) => handleConfigChange('mutedColor', v.hex)}
+          />
+          <NumberInput
+            label="Radio de borde"
+            value={config.borderRadius ?? 16}
+            onChange={(v) => handleConfigChange('borderRadius', v)}
+            min={0}
+            max={30}
+          />
+        </>
+      )}
+
       {type === 'promo-banner' && (
         <>
           <ToggleInput
