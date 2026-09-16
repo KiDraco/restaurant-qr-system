@@ -269,18 +269,18 @@ async function initializeDatabase() {
             { id: crypto.randomUUID(), type: 'action-button', x: 20, y: 450, width: 335, height: 56, zIndex: 6, locked: false, visible: true, config: { action: 'scanAnother', label: 'Escanear otra mesa', icon: 'chevron-left', variant: 'ghost', size: 'md', fullWidth: true } },
           ], config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } } },
           { id: 'menu', name: 'Menú', type: 'menu', icon: '📖', elements: [
-            { id: crypto.randomUUID(), type: 'category-tabs', x: 10, y: 10, width: 355, height: 50, zIndex: 0, locked: false, visible: true, config: {} },
-            { id: crypto.randomUUID(), type: 'search-bar', x: 10, y: 70, width: 355, height: 48, zIndex: 1, locked: false, visible: true, config: { placeholder: 'Buscar platos...' } },
-            { id: crypto.randomUUID(), type: 'menu-list', x: 10, y: 130, width: 355, height: 450, zIndex: 2, locked: false, visible: true, config: { layout: 'list', showCategoryTitle: true, showProductImage: true, showProductDescription: true, showPrice: true } },
-            { id: crypto.randomUUID(), type: 'cart-summary', x: 10, y: 590, width: 355, height: 60, zIndex: 3, locked: false, visible: true, config: { showItemCount: true, showTotal: true } },
-          ].concat(legacyElements.map((el, i) => ({ ...el, zIndex: 4 + i }))), config: { page_format: t.page_format || 'mobile-portrait', background_config: t.background_config ? JSON.parse(t.background_config) : { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } } },
+            { id: crypto.randomUUID(), type: 'category-tabs', x: 10, y: 12, width: 355, height: 48, zIndex: 0, locked: false, visible: true, config: {} },
+            { id: crypto.randomUUID(), type: 'search-bar', x: 10, y: 68, width: 355, height: 48, zIndex: 1, locked: false, visible: true, config: { placeholder: 'Buscar platos...' } },
+            { id: crypto.randomUUID(), type: 'menu-list', x: 10, y: 124, width: 355, height: 447, zIndex: 2, locked: false, visible: true, config: { layout: 'list', showCategoryTitle: true, showProductImage: true, showPrice: true } },
+            { id: crypto.randomUUID(), type: 'cart-summary', x: 10, y: 579, width: 355, height: 60, zIndex: 3, locked: false, visible: true, config: { showItemCount: true, showTotal: true } },
+          ].concat(legacyElements.map((el, i) => ({ ...el, zIndex: 4 + i }))), config: { page_format: 'mobile-portrait', background_config: t.background_config ? JSON.parse(t.background_config) : { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } } },
           { id: 'bill', name: 'Cuenta', type: 'bill', icon: '🧾', elements: [
-            { id: crypto.randomUUID(), type: 'text', x: 20, y: 30, width: 335, height: 40, zIndex: 0, locked: false, visible: true, config: { content: 'Cuenta Detallada', fontSize: 24, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
-            { id: crypto.randomUUID(), type: 'table-number', x: 20, y: 80, width: 335, height: 40, zIndex: 1, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 20, textAlign: 'center' } },
-            { id: crypto.randomUUID(), type: 'bill-items', x: 10, y: 130, width: 355, height: 350, zIndex: 2, locked: false, visible: true, config: { showQuantity: true, showUnitPrice: true, showSubtotal: true } },
-            { id: crypto.randomUUID(), type: 'total-amount', x: 20, y: 500, width: 335, height: 60, zIndex: 3, locked: false, visible: true, config: { prefix: 'Total a pagar: ', fontSize: 28, fontWeight: 'bold', color: '#FF6B6B', textAlign: 'center' } },
-            { id: crypto.randomUUID(), type: 'action-button', x: 20, y: 580, width: 335, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'requestBill', label: 'Solicitar Cuenta para Pagar', icon: 'dollar-sign', variant: 'primary', size: 'lg', fullWidth: true } },
-            { id: crypto.randomUUID(), type: 'action-button', x: 20, y: 650, width: 335, height: 56, zIndex: 5, locked: false, visible: true, config: { action: 'viewMenu', label: 'Volver al Menú', icon: 'utensils', variant: 'secondary', size: 'lg', fullWidth: true } },
+            { id: crypto.randomUUID(), type: 'text', x: 20, y: 16, width: 335, height: 40, zIndex: 0, locked: false, visible: true, config: { content: 'Cuenta Detallada', fontSize: 24, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
+            { id: crypto.randomUUID(), type: 'table-number', x: 20, y: 64, width: 335, height: 40, zIndex: 1, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 20, textAlign: 'center' } },
+            { id: crypto.randomUUID(), type: 'bill-items', x: 10, y: 112, width: 355, height: 340, zIndex: 2, locked: false, visible: true, config: { showQuantity: true, showUnitPrice: true, showSubtotal: true } },
+            { id: crypto.randomUUID(), type: 'total-amount', x: 20, y: 460, width: 335, height: 56, zIndex: 3, locked: false, visible: true, config: { prefix: 'Total a pagar: ', fontSize: 28, fontWeight: 'bold', color: '#FF6B6B', textAlign: 'center' } },
+            { id: crypto.randomUUID(), type: 'action-button', x: 20, y: 528, width: 335, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'requestBill', label: 'Solicitar Cuenta para Pagar', icon: 'dollar-sign', variant: 'primary', size: 'lg', fullWidth: true } },
+            { id: crypto.randomUUID(), type: 'action-button', x: 20, y: 592, width: 335, height: 56, zIndex: 5, locked: false, visible: true, config: { action: 'viewMenu', label: 'Volver al Menú', icon: 'utensils', variant: 'secondary', size: 'lg', fullWidth: true } },
           ], config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FAFAFA' }, grid: { enabled: true, size: 8 } } },
         ];
         
@@ -335,6 +335,115 @@ async function initializeDatabase() {
         console.log(`    ✅ "${theme.name}" table-input agregado a la página scan`);
       }
     } catch (e) { console.error('⚠️ Migración table-input falló:', e.message || e); }
+
+    // Migration: normalize menu + bill layouts (remove overlaps, harmonious spacing)
+    // - menu: keep functional stack (tabs/search/list/cart), drop strays overlapping it,
+    //   force mobile-portrait, list grows to fill available space
+    // - bill: restack vertically only when content overflows the page
+    try {
+      const PAGE_DIMS = {
+        'mobile-portrait': { width: 375, height: 667 },
+        'mobile-landscape': { width: 667, height: 375 },
+        'A4-portrait': { width: 794, height: 1123 },
+        'A4-landscape': { width: 1123, height: 794 },
+        Letter: { width: 816, height: 1056 },
+      };
+      const num = (v, fb) => { const n = Number(v); return Number.isFinite(n) ? n : fb; };
+      const boxesOverlap = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+      const themes = await db.execute('SELECT id, name, canvas_json FROM themes');
+      for (const theme of themes.rows) {
+        if (!theme.canvas_json) continue;
+        let canvas = null;
+        try {
+          canvas = typeof theme.canvas_json === 'string' ? JSON.parse(theme.canvas_json) : theme.canvas_json;
+        } catch (_) { continue; }
+        if (!canvas || !Array.isArray(canvas.pages)) continue;
+        let dirty = false;
+
+        // --- MENU page
+        const menuPage = canvas.pages.find((p) => p.type === 'menu' || p.id === 'menu');
+        if (menuPage && Array.isArray(menuPage.elements) && menuPage.elements.some((el) => el.type === 'menu-list')) {
+          const order = ['category-tabs', 'search-bar', 'menu-list', 'cart-summary'];
+          const fixedH = { 'category-tabs': 48, 'search-bar': 48, 'cart-summary': 60 };
+          const byType = {};
+          for (const el of menuPage.elements) {
+            if (order.includes(el.type) && !byType[el.type]) byType[el.type] = el;
+          }
+          const present = order.filter((t) => byType[t]);
+          if (present.length > 0) {
+            const PW = 375, PH = 667, TOP = 12, GAP = 8, BOTTOM = 20;
+            const othersH = present.filter((t) => t !== 'menu-list').reduce((s, t) => s + fixedH[t], 0);
+            const listH = present.includes('menu-list')
+              ? Math.max(200, PH - BOTTOM - TOP - othersH - GAP * present.length)
+              : 0;
+            let cursor = TOP;
+            const stackBoxes = [];
+            for (const t of present) {
+              const el = byType[t];
+              const h = t === 'menu-list' ? listH : fixedH[t];
+              if (el.x !== 10 || el.y !== cursor || el.width !== 355 || el.height !== h) dirty = true;
+              el.x = 10; el.y = cursor; el.width = 355; el.height = h;
+              stackBoxes.push({ x: 10, y: cursor, width: 355, height: h });
+              cursor += h + GAP;
+            }
+            const keepSet = new Set(present.map((t) => byType[t]));
+            const kept = [];
+            for (const el of menuPage.elements) {
+              if (keepSet.has(el)) continue;
+              const box = { x: num(el.x, 0), y: num(el.y, 0), width: num(el.width, 0), height: num(el.height, 0) };
+              if (stackBoxes.some((s) => boxesOverlap(box, s)) || box.y + box.height > PH || box.x + box.width > PW) {
+                dirty = true; // drop overlapping / off-page strays (legacy concat leftovers)
+                continue;
+              }
+              kept.push(el);
+            }
+            if (menuPage.config?.page_format !== 'mobile-portrait') {
+              menuPage.config = { ...(menuPage.config || {}), page_format: 'mobile-portrait' };
+              dirty = true;
+            }
+            if (dirty) {
+              [...present.map((t) => byType[t]), ...kept].forEach((el, i) => { el.zIndex = i; });
+              menuPage.elements = [...present.map((t) => byType[t]), ...kept];
+            }
+          }
+        }
+
+        // --- BILL page (restack only on overflow)
+        const billPage = canvas.pages.find((p) => p.type === 'bill' || p.id === 'bill');
+        if (billPage && Array.isArray(billPage.elements) && billPage.elements.length > 0) {
+          const dims = PAGE_DIMS[billPage.config?.page_format] || PAGE_DIMS['mobile-portrait'];
+          const maxBottom = Math.max(...billPage.elements.map((el) => num(el.y, 0) + num(el.height, 0)));
+          if (maxBottom > dims.height) {
+            const GAP = 10, TOP = 20, SIDE = 10;
+            const ordered = [...billPage.elements].sort((a, b) => num(a.y, 0) - num(b.y, 0));
+            const overflow = TOP + ordered.reduce((s, el) => s + num(el.height, 0), 0) + GAP * (ordered.length - 1) + 16 - dims.height;
+            if (overflow > 0) {
+              const flex = ordered.find((el) => el.type === 'bill-items' || el.type === 'menu-list');
+              if (flex) flex.height = Math.max(150, num(flex.height, 0) - overflow);
+            }
+            let y = TOP;
+            ordered.forEach((el, i) => {
+              el.width = Math.min(num(el.width, 100), dims.width - SIDE * 2);
+              el.height = Math.max(num(el.height, 40), 24);
+              el.x = Math.max(SIDE, Math.min(num(el.x, SIDE), dims.width - SIDE - el.width));
+              el.y = y;
+              el.zIndex = i;
+              y += num(el.height, 0) + GAP;
+            });
+            dirty = true;
+          }
+        }
+
+        if (dirty) {
+          await db.execute({
+            sql: 'UPDATE themes SET canvas_json = ? WHERE id = ?',
+            args: [JSON.stringify(canvas), theme.id],
+          });
+          console.log(`    ✅ "${theme.name}" layout menu/bill normalizado`);
+        }
+      }
+    } catch (e) { console.error('⚠️ Migración layout menu/bill falló:', e.message || e); }
 
     console.log('✅ Tablas inicializadas correctamente');
   } catch (error) {
