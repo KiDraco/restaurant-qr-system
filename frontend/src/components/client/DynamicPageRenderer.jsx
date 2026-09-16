@@ -342,20 +342,34 @@ export function DynamicElement({
   }
 
   if (type === 'bill-items') {
-    const { showQuantity = true, showUnitPrice = true, showSubtotal = true, itemNameSize = 16, itemNameWeight = 'semibold', itemNameColor = '#2A2A2A', detailSize = 13, detailColor = '#666666', priceSize = 16, priceWeight = 'bold', priceColor = '#FF6B6B', separatorColor = '#E5E5E5' } = config;
+    const { showQuantity = true, showUnitPrice = true, showSubtotal = true, showItemCount = true, itemNameSize = 16, itemNameWeight = 'semibold', itemNameColor = '#2A2A2A', detailSize = 13, detailColor = '#666666', priceSize = 16, priceWeight = 'bold', priceColor = '#FF6B6B', separatorColor = '#E5E5E5' } = config;
     const orders = billData?.orders || [];
     const formatPrice = (price) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(price || 0);
 
+    // Group rows by item so repeated orders read as "Papas fritas x2"
+    const groupedOrders = [];
+    for (const o of orders) {
+      const key = `${o.item_name || ''}__${o.unit_price || 0}`;
+      const found = groupedOrders.find((g) => g.key === key);
+      if (found) {
+        found.quantity += Number(o.quantity) || 0;
+        found.subtotal += Number(o.subtotal) || 0;
+      } else {
+        groupedOrders.push({ key, item_name: o.item_name, unit_price: o.unit_price, quantity: Number(o.quantity) || 0, subtotal: Number(o.subtotal) || 0 });
+      }
+    }
+    const totalUnits = groupedOrders.reduce((s, g) => s + g.quantity, 0);
+
     return (
       <div style={{ ...baseStyle, maxHeight: height, overflow: 'auto' }} className="space-y-3 p-4">
-        {orders.length === 0 ? (
+        {groupedOrders.length === 0 ? (
           <div className="text-center py-8 text-gray-500">No hay órdenes registradas</div>
         ) : (
           <>
-            {orders.map((order, index) => (
+            {groupedOrders.map((order, index) => (
               <div key={index} className="flex justify-between items-start p-3 bg-white rounded-lg border-b" style={{ borderBottomColor: separatorColor }}>
                 <div className="flex-1">
-                  <div className="font-medium text-gray-800" style={{ fontSize: itemNameSize, fontWeight: itemNameWeight, color: itemNameColor }}>{order.item_name}</div>
+                  <div className="font-medium text-gray-800" style={{ fontSize: itemNameSize, fontWeight: itemNameWeight, color: itemNameColor }}>{order.item_name}{order.quantity > 1 ? ` x${order.quantity}` : ''}</div>
                   <div className="text-sm text-gray-500 flex gap-4" style={{ fontSize: detailSize, color: detailColor }}>
                     {showQuantity && <span>{order.quantity} x {formatPrice(order.unit_price)}</span>}
                     {showUnitPrice && !showQuantity && <span>{formatPrice(order.unit_price)}</span>}
@@ -369,6 +383,12 @@ export function DynamicElement({
               </div>
             ))}
             <div className="pt-4 border-t" style={{ borderColor: separatorColor }}>
+              {showItemCount && (
+                <div className="flex justify-between text-sm text-gray-500 mb-1">
+                  <span>Productos</span>
+                  <span>{totalUnits}</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-lg" style={{ color: priceColor }}>
                 <span>Total</span>
                 <span>{formatPrice(billData?.totalAmount)}</span>
