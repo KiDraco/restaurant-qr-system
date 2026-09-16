@@ -178,6 +178,13 @@ export function SimpleEditor({
                         onChange={(v) => onUpdateElement(el.id, { config: { ...el.config, buttonColor: v.hex } })}
                       />
                     )}
+                    {el.type === 'table-input' && (
+                      <ColorInput
+                        label="Color del botón Entrar"
+                        value={{ hex: el.config?.buttonColor || '#FFFFFF', opacity: 1 }}
+                        onChange={(v) => onUpdateElement(el.id, { config: { ...el.config, buttonColor: v.hex } })}
+                      />
+                    )}
                     {el.type !== 'text' && el.type !== 'image' && el.type !== 'logo' && el.type !== 'category' && el.type !== 'action-button' && el.type !== 'table-input' && (
                       <p className="text-xs text-gray-400">Se edita en modo Profesional</p>
                     )}
