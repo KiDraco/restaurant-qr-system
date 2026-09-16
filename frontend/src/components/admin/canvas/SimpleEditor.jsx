@@ -67,7 +67,7 @@ export function SimpleEditor({
   );
 
   const updateColorPart = (key) => (v) => {
-    onUpdateGlobalConfig({ colors: { ...colors, [key]: v.hex } });
+    onUpdateGlobalConfig({ colors: { ...(globalConfig?.colors || {}), [key]: v.hex } });
   };
 
   const toggleVisible = (el) => {
