@@ -614,7 +614,7 @@ export function DynamicElement({
               {lines.map((line) => (
                 <div key={line.id} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 8, paddingBottom: 8, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: '#F0F0F0' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 'semibold', color: textColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{line.name}</div>
+                    <div style={{ fontSize: 14, fontWeight: 'semibold', color: textColor, flex: 1 }}>{line.name}</div>
                     <div style={{ fontSize: 12, color: mutedColor }}>{formatPrice(line.price)} c/u</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
