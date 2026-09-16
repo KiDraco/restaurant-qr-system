@@ -54,7 +54,8 @@ export function DynamicElement({
   activeCategory = 'all',
   searchQuery = '',
   onCategoryChange,
-  onSearchChange
+  onSearchChange,
+  globalConfig
 }) {
   const { type, x, y, width, height, config = {}, visible = true } = element;
   void pageType;
@@ -125,9 +126,9 @@ export function DynamicElement({
   }
 
   if (type === 'text') {
-    const { content = '', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'normal', color = '#2A2A2A', textAlign = 'left', lineHeight = 1.5 } = config;
+    const { content = '', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'normal', textAlign = 'left', lineHeight = 1.5 } = config;
     return (
-      <div style={{ ...baseStyle, fontFamily, fontSize, fontWeight, color, textAlign, lineHeight, display: 'flex', alignItems: 'center' }}>
+      <div style={{ ...baseStyle, fontFamily, fontSize, fontWeight, color: globalConfig?.colors?.text || color, textAlign, lineHeight, display: 'flex', alignItems: 'center' }}>
         <div style={{ width: '100%', whiteSpace: 'pre-wrap' }}>{content}</div>
       </div>
     );
@@ -781,7 +782,8 @@ export function DynamicPageRenderer({
             searchQuery={searchQuery}
             onCategoryChange={setActiveCategory}
             onSearchChange={setSearchQuery}
-          />
+            globalConfig={globalConfig}
+/>
         ))}
       </div>
     </div>
