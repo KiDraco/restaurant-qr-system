@@ -178,6 +178,24 @@ function CartSummaryPreview({ element, isSelected, isDragging, isResizing }) {
   );
 }
 
+function TableInputPreview({ element, isSelected, isDragging, isResizing }) {
+  const { width, height } = element;
+  const cfg = element.config || {};
+  return (
+    <g>
+      <rect x={0} y={0} width={width} height={height} rx={cfg.borderRadius || 12} fill={cfg.backgroundColor || '#FFFFFF'} stroke={cfg.borderColor || '#E5E7EB'} strokeWidth={1} />
+      <text x={16} y={height/2 + 5} fontSize={cfg.fontSize || 16} fontFamily={cfg.fontFamily || 'system-ui'} fontWeight={cfg.fontWeight || 'normal'} fill="#9CA3AF">
+        {cfg.placeholder || 'N° de mesa'}
+      </text>
+      <rect x={width - 90} y={6} width={84} height={height - 12} rx={cfg.borderRadius || 12} fill="#FF6B6B" />
+      <text x={width - 48} y={height/2 + 5} textAnchor="middle" fontSize={cfg.fontSize || 14} fontFamily={cfg.fontFamily || 'system-ui'} fontWeight="semibold" fill="#FFFFFF">
+        {cfg.buttonLabel || 'Entrar'}
+      </text>
+      <text x={width/2} y={height + 14} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="system-ui">[Ingreso de Mesa]</text>
+    </g>
+  );
+}
+
 function PromoBannerPreview({ element, isSelected, isDragging, isResizing }) {
   const { width, height } = element;
   const cfg = element.config || {};
@@ -212,6 +230,7 @@ const elementComponents = {
   'search-bar': SearchBarPreview,
   'cart-summary': CartSummaryPreview,
   'promo-banner': PromoBannerPreview,
+  'table-input': TableInputPreview,
 };
 
 const RESIZE_HANDLES = [

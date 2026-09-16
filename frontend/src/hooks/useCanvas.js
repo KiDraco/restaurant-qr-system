@@ -217,6 +217,19 @@ export const DEFAULT_ELEMENT_CONFIG = {
     borderRadius: 8,
     spacing: 8,
   },
+  'table-input': {
+    // Dev-only manual table number entry on scan page
+    placeholder: 'N° de mesa',
+    buttonLabel: 'Entrar',
+    fontFamily: 'system-ui',
+    fontSize: 16,
+    fontWeight: 'normal',
+    color: '#2A2A2A',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E5E5E5',
+    borderRadius: 12,
+    buttonVariant: 'primary',
+  },
 };
 
 function getDefaultPosition(existingElements, canvasWidth, canvasHeight) {

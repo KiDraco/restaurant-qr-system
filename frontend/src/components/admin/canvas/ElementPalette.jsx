@@ -25,6 +25,7 @@ const ELEMENT_CATEGORIES = [
       { type: 'search-bar', label: 'Barra de Búsqueda', icon: '🔍', description: 'Búsqueda en tiempo real del menú' },
       { type: 'cart-summary', label: 'Resumen de Carrito', icon: '🛒', description: 'Muestra items y total del pedido actual' },
       { type: 'promo-banner', label: 'Banner Promociones', icon: '🏷️', description: 'Muestra promociones activas' },
+      { type: 'table-input', label: 'Ingreso de Mesa', icon: '⌨️', description: 'Campo manual de número de mesa con botón Entrar' },
     ],
   },
 ];

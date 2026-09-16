@@ -257,6 +257,7 @@ async function initializeDatabase() {
             { id: crypto.randomUUID(), type: 'image', x: 100, y: 220, width: 175, height: 175, zIndex: 2, locked: false, visible: true, config: { src: '', alt: 'Código QR', borderRadius: 12 } },
             { id: crypto.randomUUID(), type: 'text', x: 50, y: 420, width: 275, height: 40, zIndex: 3, locked: false, visible: true, config: { content: 'O ingresa tu número de mesa:', fontSize: 14, fontFamily: 'system-ui', color: '#666666', textAlign: 'center' } },
             { id: crypto.randomUUID(), type: 'action-button', x: 50, y: 480, width: 275, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'scanAnother', label: 'Escanear mesa', icon: 'qrcode', variant: 'primary', size: 'lg', fullWidth: true } },
+            { id: crypto.randomUUID(), type: 'table-input', x: 50, y: 550, width: 275, height: 56, zIndex: 5, locked: false, visible: true, config: { placeholder: 'N° de mesa', buttonLabel: 'Entrar', fontFamily: 'system-ui', fontSize: 16, fontWeight: 'normal', color: '#2A2A2A', backgroundColor: '#FFFFFF', borderColor: '#E5E5E5', borderRadius: 12, buttonVariant: 'primary' } },
           ], config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFF8F0' }, grid: { enabled: true, size: 8 } } },
           { id: 'table', name: 'Mesa Principal', type: 'table', icon: '🍽️', elements: [
             { id: crypto.randomUUID(), type: 'table-number', x: 20, y: 30, width: 335, height: 60, zIndex: 0, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 36, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
@@ -293,6 +294,47 @@ async function initializeDatabase() {
         console.log(`    ✅ "${t.name}" migrado a multi-page (${defaultPages.length} páginas)`);
       }
     } catch (e) { console.error('⚠️ Migración multi-page falló:', e.message || e); }
+
+    // Migration: backfill table-input element on the scan page of every theme
+    // (dev workaround for manual table entry until real QR scanning exists)
+    try {
+      const themes = await db.execute('SELECT id, name, canvas_json FROM themes');
+      for (const theme of themes.rows) {
+        if (!theme.canvas_json) continue;
+        let canvas = null;
+        try {
+          canvas = typeof theme.canvas_json === 'string' ? JSON.parse(theme.canvas_json) : theme.canvas_json;
+        } catch (_) { continue; }
+        if (!canvas || !Array.isArray(canvas.pages)) continue;
+        const scanPage = canvas.pages.find((p) => p.type === 'scan' || p.id === 'scan');
+        if (!scanPage || !Array.isArray(scanPage.elements)) continue;
+        if (scanPage.elements.some((el) => el.type === 'table-input')) continue;
+
+        let maxBottom = 0;
+        for (const el of scanPage.elements) {
+          const bottom = (Number(el.y) || 0) + (Number(el.height) || 0);
+          if (bottom > maxBottom) maxBottom = bottom;
+        }
+        scanPage.elements.push({
+          id: crypto.randomUUID(),
+          type: 'table-input',
+          x: 50,
+          y: maxBottom + 16,
+          width: 275,
+          height: 56,
+          zIndex: scanPage.elements.length,
+          locked: false,
+          visible: true,
+          config: { placeholder: 'N° de mesa', buttonLabel: 'Entrar', fontFamily: 'system-ui', fontSize: 16, fontWeight: 'normal', color: '#2A2A2A', backgroundColor: '#FFFFFF', borderColor: '#E5E5E5', borderRadius: 12, buttonVariant: 'primary' },
+        });
+
+        await db.execute({
+          sql: 'UPDATE themes SET canvas_json = ? WHERE id = ?',
+          args: [JSON.stringify(canvas), theme.id],
+        });
+        console.log(`    ✅ "${theme.name}" table-input agregado a la página scan`);
+      }
+    } catch (e) { console.error('⚠️ Migración table-input falló:', e.message || e); }
 
     console.log('✅ Tablas inicializadas correctamente');
   } catch (error) {

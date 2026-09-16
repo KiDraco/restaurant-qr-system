@@ -49,6 +49,7 @@ function App() {
         { id: genId(), type: 'image', x: 100, y: 220, width: 175, height: 175, zIndex: 2, locked: false, visible: true, config: { src: '', alt: 'Código QR', borderRadius: 12 } },
         { id: genId(), type: 'text', x: 50, y: 420, width: 275, height: 40, zIndex: 3, locked: false, visible: true, config: { content: 'O ingresa tu número de mesa:', fontSize: 14, fontFamily: 'system-ui', color: '#666666', textAlign: 'center' } },
         { id: genId(), type: 'action-button', x: 50, y: 480, width: 275, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'scanAnother', label: 'Escanear mesa', icon: 'qrcode', variant: 'primary', size: 'lg', fullWidth: true } },
+        { id: genId(), type: 'table-input', x: 50, y: 550, width: 275, height: 56, zIndex: 5, locked: false, visible: true, config: { placeholder: 'N° de mesa', buttonLabel: 'Entrar', fontSize: 16, backgroundColor: '#FFFFFF', borderColor: '#E5E5E5', borderRadius: 12, buttonVariant: 'primary' } },
       ],
       config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFF8F0' }, grid: { enabled: true, size: 8 } },
     },
@@ -291,7 +292,7 @@ function App() {
     }
   }, [tableNumber, menuItems, fetchBill, showNotificationMsg]);
 
-  const handleDynamicAction = useCallback((type, payload) => {
+  const handleDynamicAction = useCallback(async (type, payload) => {
     switch (type) {
       case 'button':
         switch (payload) {
@@ -318,8 +319,20 @@ function App() {
       case 'search':
         // Search is handled locally in the search-bar component
         break;
+      case 'submitTable': {
+        const n = parseInt(payload, 10);
+        if (!Number.isFinite(n) || n <= 0) {
+          showNotificationMsg('error', 'Ingresa un número de mesa válido');
+          setTimeout(() => setNotification(null), 3000);
+          break;
+        }
+        await startSession(n);
+        setTableNumber(n);
+        setScanned(true);
+        break;
+      }
     }
-  }, [handleCallWaiter, handleRequestBill, handleCreateOrder]);
+  }, [handleCallWaiter, handleRequestBill, handleCreateOrder, showNotificationMsg, startSession]);
 
   const handleViewBill = useCallback(async () => {
     await fetchBill(tableNumber);
@@ -355,15 +368,18 @@ function App() {
   // Scan screen (before QR scan)
   if (!scanned) {
     return (
-      <DynamicPageRenderer
-        page={themePages.find(p => p.type === 'scan') || { type: 'scan', elements: [], config: { background_config: { type: 'color', value: '#FFF8F0' } } }}
-        tableNumber={null}
-        onAction={handleDynamicAction}
-        globalConfig={globalConfig}
-        menuItems={menuItems}
-        categories={categories}
-        promotions={promotions}
-      />
+      <div>
+        {notification && <Notification type={notification.type} message={notification.message} />}
+        <DynamicPageRenderer
+          page={themePages.find(p => p.type === 'scan') || { type: 'scan', elements: [], config: { background_config: { type: 'color', value: '#FFF8F0' } } }}
+          tableNumber={null}
+          onAction={handleDynamicAction}
+          globalConfig={globalConfig}
+          menuItems={menuItems}
+          categories={categories}
+          promotions={promotions}
+        />
+      </div>
     );
   }
 

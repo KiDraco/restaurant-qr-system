@@ -355,6 +355,53 @@ export function DynamicElement({
     );
   }
 
+  if (type === 'table-input') {
+    const { placeholder = 'N° de mesa', buttonLabel = 'Entrar', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'normal', color = '#2A2A2A', backgroundColor = '#FFFFFF', borderColor = '#E5E5E5', borderRadius = 12, buttonVariant = 'primary' } = config;
+    const [value, setValue] = useState('');
+    const variantClass = BUTTON_VARIANTS[buttonVariant] || BUTTON_VARIANTS.primary;
+    const mergedStyle = {
+      ...baseStyle,
+      fontFamily,
+      fontSize,
+      fontWeight,
+      color,
+      display: 'flex',
+      gap: 8,
+      alignItems: 'stretch',
+    };
+    return (
+      <div style={mergedStyle}>
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => setValue(e.target.value.replace(/[^0-9]/g, ''))}
+          onKeyDown={(e) => { if (e.key === 'Enter') onAction?.('submitTable', value); }}
+          className="flex-1 px-4 py-3 rounded-xl border transition-colors min-w-0"
+          style={{
+            fontFamily,
+            fontSize,
+            fontWeight,
+            color,
+            backgroundColor,
+            borderColor,
+            borderRadius,
+            borderWidth: 1,
+          }}
+        />
+        <button
+          onClick={() => onAction?.('submitTable', value)}
+          className={`${variantClass} px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex-shrink-0`}
+          style={{ fontFamily, fontSize, fontWeight, borderRadius }}
+        >
+          {buttonLabel}
+        </button>
+      </div>
+    );
+  }
+
   if (type === 'cart-summary') {
     const { showItemCount = true, showTotal = true, fontFamily = 'system-ui', fontSize = 14, fontWeight = 'medium', color = '#2A2A2A', backgroundColor = '#FEF9E7', borderColor = '#F5E6A0', borderRadius = 8 } = config;
     const itemCount = cart?.items?.reduce((sum, i) => sum + (i.quantity || 1), 0) || 0;
