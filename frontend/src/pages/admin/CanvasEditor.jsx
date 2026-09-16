@@ -471,6 +471,11 @@ export function CanvasEditor() {
                menuItems={[]}
                categories={[]}
              />
+             {/* Panel de elementos para modo Simple - Instagram style */}
+             <ElementPalette
+               onAddElement={addElement}
+               mode="simple"
+             />
           </div>
           <div className="flex-1 overflow-y-auto p-6" style={{ background: '#E5E5E5' }}>
             <p className="mb-3 text-center text-xs text-gray-500">Vista previa en vivo</p>
