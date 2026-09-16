@@ -1,6 +1,6 @@
 /* eslint-disable */
-import React, { useState, useMemo } from 'react';
-import { Eye, EyeOff, Smartphone } from 'lucide-react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { DynamicPageRenderer } from '../../client/DynamicPageRenderer';
 import { CURATED_PALETTES } from '../../../utils/palettes';
 import { TextInput, ColorInput, FileInput, SectionTitle } from './ElementPropertiesPanel';
@@ -125,10 +125,10 @@ export function SimpleEditor({
   onUpdateElement,
   onUpdateGlobalConfig,
   onUpdatePageConfig,
-  ...rest
+   activePageId,
+   ...rest
 }) {
-  void rest;
-  const colors = globalConfig?.colors || {};
+   const colors = globalConfig?.colors || {};
   const pageBg = activePage?.config?.background_config || { type: 'color', value: '#FFFFFF' };
   const safeElements = Array.isArray(elements) ? elements : [];
 
@@ -198,6 +198,15 @@ export function SimpleEditor({
       background_config: { type: 'gradient', value: { ...bgObject, to: v.hex } },
     });
   };
+
+  // When the user taps an action-button in the preview, select that instance
+  // so the "Botones" color control applies buttonColor to it (not global color).
+  const handlePreviewAction = useCallback((type, payload) => {
+    if (type === 'button') {
+      const el = safeElements.find((e) => e.type === 'action-button' && e.config?.action === payload);
+      if (el) setSelectedActionId((cur) => (cur === el.id ? null : el.id));
+    }
+  }, [safeElements]);
 
   // Phone-frame preview of the active page so action-buttons can be tapped
   // to select them for per-button color (instead of changing global color).
@@ -352,9 +361,10 @@ export function SimpleEditor({
         <SectionTitle title="Vista previa (tocá un botón para asignarle color)" />
         <div className="overflow-hidden rounded-2xl shadow-lg" style={{ width: 280, height: 500, background: '#f3f4f6' }}>
           <DynamicPageRenderer
+            key={activePageId}
             page={previewPage}
             globalConfig={globalConfig}
-            onAction={() => {}}
+            onAction={handlePreviewAction}
             cartOpen={false}
             onToggleCart={() => {}}
             activeCategory="all"
@@ -365,8 +375,8 @@ export function SimpleEditor({
         </div>
         <p className="text-xs text-gray-500 mt-2 text-center">
           {selectedActionId
-            ? 'Color seleccionado → aplica al botón activo arriba'
-            : 'Cada botón de la vista previa es tocable en el panel de contenido'}
+            ? 'Color aplicado al botón seleccionado'
+            : 'Tocá un botón en la vista previa para asignarle color'}
         </p>
       </div>
     </div>

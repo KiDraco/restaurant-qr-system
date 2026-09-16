@@ -460,16 +460,17 @@ export function CanvasEditor() {
         {editorMode === 'simple' ? (
         <div className="flex-1 flex overflow-hidden">
           <div className="w-[380px] shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
-            <SimpleEditor
-              activePage={activePage}
-              elements={elements}
-              globalConfig={globalConfig}
-              onUpdateElement={updateElement}
-              onUpdateGlobalConfig={setGlobalConfig}
-              onUpdatePageConfig={(patch) => setPageConfig(activePageId, patch)}
-              menuItems={[]}
-              categories={[]}
-            />
+             <SimpleEditor
+               activePage={activePage}
+               elements={elements}
+               globalConfig={globalConfig}
+               onUpdateElement={updateElement}
+               onUpdateGlobalConfig={setGlobalConfig}
+               onUpdatePageConfig={(patch) => setPageConfig(activePageId, patch)}
+               activePageId={activePageId}
+               menuItems={[]}
+               categories={[]}
+             />
           </div>
           <div className="flex-1 overflow-y-auto p-6" style={{ background: '#E5E5E5' }}>
             <p className="mb-3 text-center text-xs text-gray-500">Vista previa en vivo</p>
