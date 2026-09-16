@@ -48,8 +48,7 @@ function App() {
         { id: genId(), type: 'text', x: 50, y: 150, width: 275, height: 40, zIndex: 1, locked: false, visible: true, config: { content: 'Escanea el QR de tu mesa', fontSize: 16, fontFamily: 'system-ui', color: '#666666', textAlign: 'center' } },
         { id: genId(), type: 'image', x: 100, y: 220, width: 175, height: 175, zIndex: 2, locked: false, visible: true, config: { src: '', alt: 'Código QR', borderRadius: 12 } },
         { id: genId(), type: 'text', x: 50, y: 420, width: 275, height: 40, zIndex: 3, locked: false, visible: true, config: { content: 'O ingresa tu número de mesa:', fontSize: 14, fontFamily: 'system-ui', color: '#666666', textAlign: 'center' } },
-        { id: genId(), type: 'action-button', x: 50, y: 480, width: 275, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'scanAnother', label: 'Escanear mesa', icon: 'qrcode', variant: 'primary', size: 'lg', fullWidth: true } },
-        { id: genId(), type: 'table-input', x: 50, y: 550, width: 275, height: 56, zIndex: 5, locked: false, visible: true, config: { placeholder: 'N° de mesa', buttonLabel: 'Entrar', fontSize: 16, backgroundColor: '#FFFFFF', borderColor: '#E5E5E5', borderRadius: 12, buttonVariant: 'primary' } },
+        { id: genId(), type: 'table-input', x: 50, y: 480, width: 275, height: 56, zIndex: 4, locked: false, visible: true, config: { placeholder: 'N° de mesa', buttonLabel: 'Entrar', fontSize: 16, backgroundColor: '#FFFFFF', borderColor: '#E5E5E5', borderRadius: 12, buttonVariant: 'primary' } },
       ],
       config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFF8F0' }, grid: { enabled: true, size: 8 } },
     },
@@ -75,10 +74,11 @@ function App() {
       type: 'menu',
       icon: '📖',
       elements: [
-        { id: genId(), type: 'category-tabs', x: 10, y: 12, width: 355, height: 48, zIndex: 0, locked: false, visible: true, config: {} },
-        { id: genId(), type: 'search-bar', x: 10, y: 68, width: 355, height: 48, zIndex: 1, locked: false, visible: true, config: { placeholder: 'Buscar platos...' } },
-        { id: genId(), type: 'menu-list', x: 10, y: 124, width: 355, height: 447, zIndex: 2, locked: false, visible: true, config: { layout: 'list', showCategoryTitle: true, showProductImage: true, showProductDescription: true, showPrice: true } },
-        { id: genId(), type: 'cart-summary', x: 10, y: 579, width: 355, height: 60, zIndex: 3, locked: false, visible: true, config: { showItemCount: true, showTotal: true } },
+        { id: genId(), type: 'action-button', x: 10, y: 8, width: 355, height: 40, zIndex: 0, locked: false, visible: true, config: { action: 'goBack', label: 'Volver', icon: 'chevron-left', variant: 'ghost', size: 'md', fullWidth: true } },
+        { id: genId(), type: 'category-tabs', x: 10, y: 56, width: 355, height: 48, zIndex: 1, locked: false, visible: true, config: {} },
+        { id: genId(), type: 'search-bar', x: 10, y: 112, width: 355, height: 44, zIndex: 2, locked: false, visible: true, config: { placeholder: 'Buscar platos...' } },
+        { id: genId(), type: 'menu-list', x: 10, y: 164, width: 355, height: 410, zIndex: 3, locked: false, visible: true, config: { layout: 'list', showCategoryTitle: true, showProductImage: true, showProductDescription: true, showPrice: true } },
+        { id: genId(), type: 'cart-summary', x: 10, y: 582, width: 355, height: 60, zIndex: 4, locked: false, visible: true, config: { showItemCount: true, showTotal: true } },
       ],
       config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } },
     },
@@ -88,12 +88,13 @@ function App() {
       type: 'bill',
       icon: '🧾',
       elements: [
-        { id: genId(), type: 'text', x: 20, y: 16, width: 335, height: 40, zIndex: 0, locked: false, visible: true, config: { content: 'Cuenta Detallada', fontSize: 24, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
-        { id: genId(), type: 'table-number', x: 20, y: 64, width: 335, height: 40, zIndex: 1, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 20, textAlign: 'center' } },
-        { id: genId(), type: 'bill-items', x: 10, y: 112, width: 355, height: 340, zIndex: 2, locked: false, visible: true, config: { showQuantity: true, showUnitPrice: true, showSubtotal: true } },
-        { id: genId(), type: 'total-amount', x: 20, y: 460, width: 335, height: 56, zIndex: 3, locked: false, visible: true, config: { prefix: 'Total a pagar: ', fontSize: 28, fontWeight: 'bold', color: '#FF6B6B', textAlign: 'center' } },
-        { id: genId(), type: 'action-button', x: 20, y: 528, width: 335, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'requestBill', label: 'Solicitar Cuenta para Pagar', icon: 'dollar-sign', variant: 'primary', size: 'lg', fullWidth: true } },
-        { id: genId(), type: 'action-button', x: 20, y: 592, width: 335, height: 56, zIndex: 5, locked: false, visible: true, config: { action: 'viewMenu', label: 'Volver al Menú', icon: 'utensils', variant: 'secondary', size: 'lg', fullWidth: true } },
+        { id: genId(), type: 'text', x: 20, y: 16, width: 335, height: 36, zIndex: 0, locked: false, visible: true, config: { content: 'Cuenta Detallada', fontSize: 24, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
+        { id: genId(), type: 'table-number', x: 20, y: 60, width: 335, height: 32, zIndex: 1, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 20, textAlign: 'center' } },
+        { id: genId(), type: 'bill-items', x: 10, y: 100, width: 355, height: 360, zIndex: 2, locked: false, visible: true, config: { showQuantity: true, showUnitPrice: true, showSubtotal: true } },
+        { id: genId(), type: 'total-amount', x: 20, y: 468, width: 335, height: 52, zIndex: 3, locked: false, visible: true, config: { prefix: 'Total a pagar: ', fontSize: 28, fontWeight: 'bold', color: '#FF6B6B', textAlign: 'center' } },
+        { id: genId(), type: 'action-button', x: 20, y: 528, width: 335, height: 52, zIndex: 4, locked: false, visible: true, config: { action: 'requestBill', label: 'Solicitar Cuenta para Pagar', icon: 'dollar-sign', variant: 'primary', size: 'lg', fullWidth: true } },
+        { id: genId(), type: 'action-button', x: 20, y: 588, width: 162, height: 52, zIndex: 5, locked: false, visible: true, config: { action: 'refreshBill', label: 'Actualizar', icon: 'refresh', variant: 'ghost', size: 'md', fullWidth: true } },
+        { id: genId(), type: 'action-button', x: 193, y: 588, width: 162, height: 52, zIndex: 6, locked: false, visible: true, config: { action: 'goBack', label: 'Volver', icon: 'chevron-left', variant: 'ghost', size: 'md', fullWidth: true } },
       ],
       config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FAFAFA' }, grid: { enabled: true, size: 8 } },
     },
@@ -311,6 +312,21 @@ function App() {
           case 'scanAnother':
             handleReset();
             break;
+          case 'goBack':
+            if (showBill) {
+              setShowBill(false);
+            } else if (showMenu) {
+              setShowMenu(false);
+            }
+            break;
+          case 'refreshBill':
+            if (tableNumber) {
+              showNotificationMsg('bill', 'Actualizando cuenta...');
+              await fetchBill(tableNumber);
+              showNotificationMsg('success', 'Cuenta actualizada');
+              setTimeout(() => setNotification(null), 3000);
+            }
+            break;
         }
         break;
       case 'order':
@@ -332,7 +348,7 @@ function App() {
         break;
       }
     }
-  }, [handleCallWaiter, handleRequestBill, handleCreateOrder, showNotificationMsg, startSession]);
+  }, [handleCallWaiter, handleRequestBill, handleCreateOrder, showNotificationMsg, startSession, showBill, showMenu, tableNumber, fetchBill]);
 
   const handleViewBill = useCallback(async () => {
     await fetchBill(tableNumber);
@@ -386,17 +402,20 @@ function App() {
   // Bill detail screen
   if (showBill) {
     return (
-      <DynamicPageRenderer
-        page={themePages.find(p => p.type === 'bill') || { type: 'bill', elements: [], config: {} }}
-        tableNumber={tableNumber}
-        billData={bill}
-        onAction={handleDynamicAction}
-        globalConfig={globalConfig}
-        menuItems={menuItems}
-        categories={categories}
-        promotions={promotions}
-        cart={cart}
-      />
+      <div>
+        {notification && <Notification type={notification.type} message={notification.message} />}
+        <DynamicPageRenderer
+          page={themePages.find(p => p.type === 'bill') || { type: 'bill', elements: [], config: {} }}
+          tableNumber={tableNumber}
+          billData={bill}
+          onAction={handleDynamicAction}
+          globalConfig={globalConfig}
+          menuItems={menuItems}
+          categories={categories}
+          promotions={promotions}
+          cart={cart}
+        />
+      </div>
     );
   }
 

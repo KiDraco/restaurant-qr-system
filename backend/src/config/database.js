@@ -283,8 +283,7 @@ async function initializeDatabase() {
             { id: crypto.randomUUID(), type: 'text', x: 50, y: 150, width: 275, height: 40, zIndex: 1, locked: false, visible: true, config: { content: 'Escanea el QR de tu mesa', fontSize: 16, fontFamily: 'system-ui', color: '#666666', textAlign: 'center' } },
             { id: crypto.randomUUID(), type: 'image', x: 100, y: 220, width: 175, height: 175, zIndex: 2, locked: false, visible: true, config: { src: '', alt: 'Código QR', borderRadius: 12 } },
             { id: crypto.randomUUID(), type: 'text', x: 50, y: 420, width: 275, height: 40, zIndex: 3, locked: false, visible: true, config: { content: 'O ingresa tu número de mesa:', fontSize: 14, fontFamily: 'system-ui', color: '#666666', textAlign: 'center' } },
-            { id: crypto.randomUUID(), type: 'action-button', x: 50, y: 480, width: 275, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'scanAnother', label: 'Escanear mesa', icon: 'qrcode', variant: 'primary', size: 'lg', fullWidth: true } },
-            { id: crypto.randomUUID(), type: 'table-input', x: 50, y: 550, width: 275, height: 56, zIndex: 5, locked: false, visible: true, config: { placeholder: 'N° de mesa', buttonLabel: 'Entrar', fontFamily: 'system-ui', fontSize: 16, fontWeight: 'normal', color: '#2A2A2A', backgroundColor: '#FFFFFF', borderColor: '#E5E5E5', borderRadius: 12, buttonVariant: 'primary' } },
+            { id: crypto.randomUUID(), type: 'table-input', x: 50, y: 480, width: 275, height: 56, zIndex: 4, locked: false, visible: true, config: { placeholder: 'N° de mesa', buttonLabel: 'Entrar', fontFamily: 'system-ui', fontSize: 16, fontWeight: 'normal', color: '#2A2A2A', backgroundColor: '#FFFFFF', borderColor: '#E5E5E5', borderRadius: 12, buttonVariant: 'primary' } },
           ], config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFF8F0' }, grid: { enabled: true, size: 8 } } },
           { id: 'table', name: 'Mesa Principal', type: 'table', icon: '🍽️', elements: [
             { id: crypto.randomUUID(), type: 'table-number', x: 20, y: 30, width: 335, height: 60, zIndex: 0, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 36, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
@@ -296,18 +295,20 @@ async function initializeDatabase() {
             { id: crypto.randomUUID(), type: 'action-button', x: 20, y: 450, width: 335, height: 56, zIndex: 6, locked: false, visible: true, config: { action: 'scanAnother', label: 'Escanear otra mesa', icon: 'chevron-left', variant: 'ghost', size: 'md', fullWidth: true } },
           ], config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } } },
           { id: 'menu', name: 'Menú', type: 'menu', icon: '📖', elements: [
-            { id: crypto.randomUUID(), type: 'category-tabs', x: 10, y: 12, width: 355, height: 48, zIndex: 0, locked: false, visible: true, config: {} },
-            { id: crypto.randomUUID(), type: 'search-bar', x: 10, y: 68, width: 355, height: 48, zIndex: 1, locked: false, visible: true, config: { placeholder: 'Buscar platos...' } },
-            { id: crypto.randomUUID(), type: 'menu-list', x: 10, y: 124, width: 355, height: 447, zIndex: 2, locked: false, visible: true, config: { layout: 'list', showCategoryTitle: true, showProductImage: true, showPrice: true } },
-            { id: crypto.randomUUID(), type: 'cart-summary', x: 10, y: 579, width: 355, height: 60, zIndex: 3, locked: false, visible: true, config: { showItemCount: true, showTotal: true } },
-          ].concat(legacyElements.map((el, i) => ({ ...el, zIndex: 4 + i }))), config: { page_format: 'mobile-portrait', background_config: t.background_config ? JSON.parse(t.background_config) : { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } } },
+            { id: crypto.randomUUID(), type: 'action-button', x: 10, y: 8, width: 355, height: 40, zIndex: 0, locked: false, visible: true, config: { action: 'goBack', label: 'Volver', icon: 'chevron-left', variant: 'ghost', size: 'md', fullWidth: true } },
+            { id: crypto.randomUUID(), type: 'category-tabs', x: 10, y: 56, width: 355, height: 48, zIndex: 1, locked: false, visible: true, config: {} },
+            { id: crypto.randomUUID(), type: 'search-bar', x: 10, y: 112, width: 355, height: 44, zIndex: 2, locked: false, visible: true, config: { placeholder: 'Buscar platos...' } },
+            { id: crypto.randomUUID(), type: 'menu-list', x: 10, y: 164, width: 355, height: 410, zIndex: 3, locked: false, visible: true, config: { layout: 'list', showCategoryTitle: true, showProductImage: true, showPrice: true } },
+            { id: crypto.randomUUID(), type: 'cart-summary', x: 10, y: 582, width: 355, height: 60, zIndex: 4, locked: false, visible: true, config: { showItemCount: true, showTotal: true } },
+          ].concat(legacyElements.map((el, i) => ({ ...el, zIndex: 5 + i }))), config: { page_format: 'mobile-portrait', background_config: t.background_config ? JSON.parse(t.background_config) : { type: 'color', value: '#FFFFFF' }, grid: { enabled: true, size: 8 } } },
           { id: 'bill', name: 'Cuenta', type: 'bill', icon: '🧾', elements: [
-            { id: crypto.randomUUID(), type: 'text', x: 20, y: 16, width: 335, height: 40, zIndex: 0, locked: false, visible: true, config: { content: 'Cuenta Detallada', fontSize: 24, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
-            { id: crypto.randomUUID(), type: 'table-number', x: 20, y: 64, width: 335, height: 40, zIndex: 1, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 20, textAlign: 'center' } },
-            { id: crypto.randomUUID(), type: 'bill-items', x: 10, y: 112, width: 355, height: 340, zIndex: 2, locked: false, visible: true, config: { showQuantity: true, showUnitPrice: true, showSubtotal: true } },
-            { id: crypto.randomUUID(), type: 'total-amount', x: 20, y: 460, width: 335, height: 56, zIndex: 3, locked: false, visible: true, config: { prefix: 'Total a pagar: ', fontSize: 28, fontWeight: 'bold', color: '#FF6B6B', textAlign: 'center' } },
-            { id: crypto.randomUUID(), type: 'action-button', x: 20, y: 528, width: 335, height: 56, zIndex: 4, locked: false, visible: true, config: { action: 'requestBill', label: 'Solicitar Cuenta para Pagar', icon: 'dollar-sign', variant: 'primary', size: 'lg', fullWidth: true } },
-            { id: crypto.randomUUID(), type: 'action-button', x: 20, y: 592, width: 335, height: 56, zIndex: 5, locked: false, visible: true, config: { action: 'viewMenu', label: 'Volver al Menú', icon: 'utensils', variant: 'secondary', size: 'lg', fullWidth: true } },
+            { id: crypto.randomUUID(), type: 'text', x: 20, y: 16, width: 335, height: 36, zIndex: 0, locked: false, visible: true, config: { content: 'Cuenta Detallada', fontSize: 24, fontWeight: 'bold', color: '#2A2A2A', textAlign: 'center' } },
+            { id: crypto.randomUUID(), type: 'table-number', x: 20, y: 60, width: 335, height: 32, zIndex: 1, locked: false, visible: true, config: { prefix: 'Mesa ', fontSize: 20, textAlign: 'center' } },
+            { id: crypto.randomUUID(), type: 'bill-items', x: 10, y: 100, width: 355, height: 360, zIndex: 2, locked: false, visible: true, config: { showQuantity: true, showUnitPrice: true, showSubtotal: true } },
+            { id: crypto.randomUUID(), type: 'total-amount', x: 20, y: 468, width: 335, height: 52, zIndex: 3, locked: false, visible: true, config: { prefix: 'Total a pagar: ', fontSize: 28, fontWeight: 'bold', color: '#FF6B6B', textAlign: 'center' } },
+            { id: crypto.randomUUID(), type: 'action-button', x: 20, y: 528, width: 335, height: 52, zIndex: 4, locked: false, visible: true, config: { action: 'requestBill', label: 'Solicitar Cuenta para Pagar', icon: 'dollar-sign', variant: 'primary', size: 'lg', fullWidth: true } },
+            { id: crypto.randomUUID(), type: 'action-button', x: 20, y: 588, width: 162, height: 52, zIndex: 5, locked: false, visible: true, config: { action: 'refreshBill', label: 'Actualizar', icon: 'refresh', variant: 'ghost', size: 'md', fullWidth: true } },
+            { id: crypto.randomUUID(), type: 'action-button', x: 193, y: 588, width: 162, height: 52, zIndex: 6, locked: false, visible: true, config: { action: 'goBack', label: 'Volver', icon: 'chevron-left', variant: 'ghost', size: 'md', fullWidth: true } },
           ], config: { page_format: 'mobile-portrait', background_config: { type: 'color', value: '#FAFAFA' }, grid: { enabled: true, size: 8 } } },
         ];
         
@@ -471,6 +472,157 @@ async function initializeDatabase() {
         }
       }
     } catch (e) { console.error('⚠️ Migración layout menu/bill falló:', e.message || e); }
+
+    // Migration: normalize multi-page themes to canonical pre-canvas geometry
+    // - MENU (has menu-list AND [stray overlap/off-page vs functional stack OR format != mobile-portrait OR no goBack]):
+    //   rebuild canonical geometry preserving ids/configs, drop overlapping/off-page strays, force mobile-portrait, append goBack if missing.
+    // - BILL (has bill-items AND [bottom overflow OR missing refreshBill/goBack OR has viewMenu button]):
+    //   rebuild canonical preserving ids/configs, drop other action-buttons, append actualizar + volver.
+    // - SCAN (has table-input AND scanAnother button): remove scanAnother button(s).
+    try {
+      const PAGE_W = 375;
+      const PAGE_H = 667;
+      const num = (v, fb) => { const n = Number(v); return Number.isFinite(n) ? n : fb; };
+      const boxesOverlap = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+      const isGoBack = (el) => el && el.type === 'action-button' && el.config && el.config.action === 'goBack';
+      const buttonAction = (el) => (el && el.type === 'action-button' && el.config && el.config.action) || null;
+
+      const MENU_SLOTS = [
+        { key: 'goBack', geo: { x: 10, y: 8, width: 355, height: 40 } },
+        { key: 'category-tabs', geo: { x: 10, y: 56, width: 355, height: 48 } },
+        { key: 'search-bar', geo: { x: 10, y: 112, width: 355, height: 44 } },
+        { key: 'menu-list', geo: { x: 10, y: 164, width: 355, height: 410 } },
+        { key: 'cart-summary', geo: { x: 10, y: 582, width: 355, height: 60 } },
+      ];
+      const BILL_SLOTS = [
+        { key: 'title', geo: { x: 20, y: 16, width: 335, height: 36 } },
+        { key: 'table-number', geo: { x: 20, y: 60, width: 335, height: 32 } },
+        { key: 'bill-items', geo: { x: 10, y: 100, width: 355, height: 360 } },
+        { key: 'total-amount', geo: { x: 20, y: 468, width: 335, height: 52 } },
+        { key: 'requestBill', geo: { x: 20, y: 528, width: 335, height: 52 } },
+        { key: 'refreshBill', geo: { x: 20, y: 588, width: 162, height: 52 } },
+        { key: 'goBack', geo: { x: 193, y: 588, width: 162, height: 52 } },
+      ];
+
+      const themes = await db.execute('SELECT id, name, canvas_json FROM themes');
+      for (const theme of themes.rows) {
+        if (!theme.canvas_json) continue;
+        let canvas = null;
+        try {
+          canvas = typeof theme.canvas_json === 'string' ? JSON.parse(theme.canvas_json) : theme.canvas_json;
+        } catch (_) { continue; }
+        if (!canvas || !Array.isArray(canvas.pages)) continue;
+        let dirty = false;
+        const notes = [];
+
+        // --- SCAN page: drop scanAnother button(s) when table-input exists
+        const scanPage = canvas.pages.find((p) => p.type === 'scan' || p.id === 'scan');
+        if (scanPage && Array.isArray(scanPage.elements) && scanPage.elements.some((el) => el.type === 'table-input')) {
+          const before = scanPage.elements.length;
+          scanPage.elements = scanPage.elements.filter((el) => buttonAction(el) !== 'scanAnother');
+          if (scanPage.elements.length !== before) {
+            scanPage.elements.forEach((el, i) => { el.zIndex = i; });
+            dirty = true;
+            notes.push('scan: scanAnother removido');
+          }
+        }
+
+        // --- MENU page
+        const menuPage = canvas.pages.find((p) => p.type === 'menu' || p.id === 'menu');
+        if (menuPage && Array.isArray(menuPage.elements) && menuPage.elements.some((el) => el.type === 'menu-list')) {
+          const firstOf = (pred) => menuPage.elements.find(pred) || null;
+          const found = {
+            goBack: firstOf(isGoBack),
+            'category-tabs': firstOf((el) => el.type === 'category-tabs'),
+            'search-bar': firstOf((el) => el.type === 'search-bar'),
+            'menu-list': firstOf((el) => el.type === 'menu-list'),
+            'cart-summary': firstOf((el) => el.type === 'cart-summary'),
+          };
+          const functionalSet = new Set(Object.values(found).filter(Boolean));
+          const stackBoxes = MENU_SLOTS.map((s) => ({ ...s.geo }));
+          let strayProblem = false;
+          for (const el of menuPage.elements) {
+            if (functionalSet.has(el)) continue;
+            const box = { x: num(el.x, 0), y: num(el.y, 0), width: num(el.width, 0), height: num(el.height, 0) };
+            if (stackBoxes.some((s) => boxesOverlap(box, s)) || box.x + box.width > PAGE_W || box.y + box.height > PAGE_H) {
+              strayProblem = true;
+              break;
+            }
+          }
+          const needsMenu = strayProblem || menuPage.config?.page_format !== 'mobile-portrait' || !found.goBack;
+          if (needsMenu) {
+            const keptStrays = [];
+            for (const el of menuPage.elements) {
+              if (functionalSet.has(el)) continue;
+              const box = { x: num(el.x, 0), y: num(el.y, 0), width: num(el.width, 0), height: num(el.height, 0) };
+              if (stackBoxes.some((s) => boxesOverlap(box, s)) || box.x + box.width > PAGE_W || box.y + box.height > PAGE_H) continue;
+              keptStrays.push(el);
+            }
+            const rebuilt = [];
+            MENU_SLOTS.forEach((slot, i) => {
+              let el = found[slot.key];
+              if (!el) {
+                el = slot.key === 'goBack'
+                  ? { id: crypto.randomUUID(), type: 'action-button', locked: false, visible: true, config: { action: 'goBack', label: 'Volver', icon: 'chevron-left', variant: 'ghost', size: 'md', fullWidth: true } }
+                  : { id: crypto.randomUUID(), type: slot.key, locked: false, visible: true, config: {} };
+              }
+              el.x = slot.geo.x; el.y = slot.geo.y; el.width = slot.geo.width; el.height = slot.geo.height;
+              el.zIndex = i;
+              if (el.visible === undefined) el.visible = true;
+              rebuilt.push(el);
+            });
+            keptStrays.forEach((el, i) => { el.zIndex = rebuilt.length + i; });
+            menuPage.elements = [...rebuilt, ...keptStrays];
+            menuPage.config = { ...(menuPage.config || {}), page_format: 'mobile-portrait' };
+            dirty = true;
+            notes.push('menu: geometria canonica restaurada');
+          }
+        }
+
+        // --- BILL page
+        const billPage = canvas.pages.find((p) => p.type === 'bill' || p.id === 'bill');
+        if (billPage && Array.isArray(billPage.elements) && billPage.elements.some((el) => el.type === 'bill-items')) {
+          const actions = billPage.elements.map(buttonAction).filter(Boolean);
+          const maxBottom = Math.max(...billPage.elements.map((el) => num(el.y, 0) + num(el.height, 0)));
+          const needsBill = maxBottom > PAGE_H || !actions.includes('refreshBill') || !actions.includes('goBack') || actions.includes('viewMenu');
+          if (needsBill) {
+            const pick = (pred) => billPage.elements.find(pred) || null;
+            const titleEl = pick((el) => el.type === 'text');
+            const tableEl = pick((el) => el.type === 'table-number');
+            const itemsEl = pick((el) => el.type === 'bill-items');
+            const totalEl = pick((el) => el.type === 'total-amount');
+            const requestEl = pick((el) => buttonAction(el) === 'requestBill');
+            let refreshEl = pick((el) => buttonAction(el) === 'refreshBill');
+            let backEl = pick((el) => buttonAction(el) === 'goBack');
+            if (!refreshEl) refreshEl = { id: crypto.randomUUID(), type: 'action-button', locked: false, visible: true, config: { action: 'refreshBill', label: 'Actualizar', icon: 'refresh', variant: 'ghost', size: 'md', fullWidth: true } };
+            if (!backEl) backEl = { id: crypto.randomUUID(), type: 'action-button', locked: false, visible: true, config: { action: 'goBack', label: 'Volver', icon: 'chevron-left', variant: 'ghost', size: 'md', fullWidth: true } };
+            const slotSources = { title: titleEl, 'table-number': tableEl, 'bill-items': itemsEl, 'total-amount': totalEl, requestBill: requestEl, refreshBill: refreshEl, goBack: backEl };
+            const rebuilt = BILL_SLOTS.map((slot, i) => {
+              let el = slotSources[slot.key];
+              if (!el) {
+                el = { id: crypto.randomUUID(), type: slot.key === 'title' ? 'text' : slot.key, locked: false, visible: true, config: {} };
+              }
+              el.x = slot.geo.x; el.y = slot.geo.y; el.width = slot.geo.width; el.height = slot.geo.height;
+              el.zIndex = i;
+              if (el.visible === undefined) el.visible = true;
+              return el;
+            });
+            billPage.elements = rebuilt;
+            billPage.config = { ...(billPage.config || {}), page_format: 'mobile-portrait' };
+            dirty = true;
+            notes.push('bill: geometria canonica restaurada');
+          }
+        }
+
+        if (dirty) {
+          await db.execute({
+            sql: 'UPDATE themes SET canvas_json = ? WHERE id = ?',
+            args: [JSON.stringify(canvas), theme.id],
+          });
+          console.log(`    ✅ "${theme.name}" normalizado (${notes.join('; ')})`);
+        }
+      }
+    } catch (e) { console.error('⚠️ Migración canonica pre-canvas falló:', e.message || e); }
 
     console.log('✅ Tablas inicializadas correctamente');
   } catch (error) {

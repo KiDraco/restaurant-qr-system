@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronLeft, UtensilsCrossed, Bell, Receipt, DollarSign, Search } from 'lucide-react';
+import { ChevronLeft, UtensilsCrossed, Bell, Receipt, DollarSign, Search, RotateCw, X } from 'lucide-react';
 import { PAGE_DIMENSIONS } from '../../hooks/useCanvas';
 
 // Icon mapping for action buttons
@@ -10,6 +10,7 @@ const ACTION_ICONS = {
   'dollar-sign': <DollarSign className="w-5 h-5" />,
   qrcode: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
   'chevron-left': <ChevronLeft className="w-5 h-5" />,
+  refresh: <RotateCw className="w-5 h-5" />,
 };
 
 const ACTION_LABELS = {
@@ -47,9 +48,49 @@ export function DynamicElement({
   tableNumber = null,
   promotions = [],
   cart = { items: [], total: 0 },
-  onAction 
+  onAction,
+  activeCategory = 'all',
+  searchQuery = '',
+  onCategoryChange,
+  onSearchChange
 }) {
   const { type, x, y, width, height, config = {}, visible = true } = element;
+  void pageType;
+  // Local state kept at the top level so hooks never run conditionally.
+  const [tableInputValue, setTableInputValue] = useState('');
+  const [pendingId, setPendingId] = useState(null);
+
+  // Group menu items by category (used by menu-list).
+  const itemsByCategory = useMemo(() => {
+    const grouped = {};
+    menuItems.forEach(item => {
+      if (!grouped[item.category]) grouped[item.category] = [];
+      grouped[item.category].push(item);
+    });
+    return grouped;
+  }, [menuItems]);
+
+  // Filtered menu items shared by list and grid layouts.
+  const filteredMenuItems = useMemo(() => {
+    const q = (searchQuery ?? '').trim().toLowerCase();
+    return menuItems.filter(item => {
+      const categoryOk = !activeCategory || activeCategory === 'all' || item.category === activeCategory;
+      if (!categoryOk) return false;
+      if (!q) return true;
+      const haystack = `${item.name || ''} ${item.description || ''}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [menuItems, activeCategory, searchQuery]);
+
+  const filteredByCategory = useMemo(() => {
+    const grouped = {};
+    filteredMenuItems.forEach(item => {
+      if (!grouped[item.category]) grouped[item.category] = [];
+      grouped[item.category].push(item);
+    });
+    return grouped;
+  }, [filteredMenuItems]);
+
   if (!visible) return null;
 
   const baseStyle = {
@@ -148,27 +189,47 @@ export function DynamicElement({
   if (type === 'menu-list') {
     const { layout = 'list', showCategoryTitle = true, showProductImage = true, showProductDescription = true, showPrice = true, productImageHeight = 120, productImageRadius = 8, itemSpacing = 16, categoryTitleSize = 20, categoryTitleWeight = 'bold', categoryTitleColor = '#2A2A2A', productNameSize = 16, productNameWeight = 'semibold', productNameColor = '#2A2A2A', productDescSize = 13, productDescColor = '#666666', productPriceSize = 16, productPriceWeight = 'bold', productPriceColor = '#FF6B6B' } = config;
 
-    const itemsByCategory = useMemo(() => {
-      const grouped = {};
-      menuItems.forEach(item => {
-        if (!grouped[item.category]) grouped[item.category] = [];
-        grouped[item.category].push(item);
-      });
-      return grouped;
-    }, [menuItems]);
+    const handleOrder = (item) => {
+      setPendingId(item.id);
+      try {
+        onAction?.('order', item);
+      } finally {
+        setTimeout(() => {
+          setPendingId((current) => (current === item.id ? null : current));
+        }, 1500);
+      }
+    };
+
+    const formatMenuPrice = (price) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(price || 0);
+
+    if (filteredMenuItems.length === 0) {
+      return (
+        <div style={{ ...baseStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <span className="text-gray-500 text-center">Sin resultados para tu búsqueda</span>
+        </div>
+      );
+    }
 
     if (layout === 'grid') {
       return (
-        <div style={{ ...baseStyle, maxHeight: height, overflow: 'auto' }} className="grid grid-cols-2 gap-4 p-4">
-          {menuItems.map(item => (
-            <div key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm">
+        <div style={{ ...baseStyle, maxHeight: height, overflow: 'auto', gap: itemSpacing }} className="grid grid-cols-2 gap-4 p-4">
+          {filteredMenuItems.map(item => (
+            <div key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm flex flex-col">
               {showProductImage && item.image_url && (
-                <img src={item.image_url} alt={item.name} className="w-full h-32 object-cover" style={{ borderRadius: productImageRadius }} />
+                <img src={item.image_url} alt={item.name} className="w-full object-cover" style={{ height: productImageHeight, borderRadius: productImageRadius }} />
               )}
-              <div className="p-3">
+              <div className="p-3 flex flex-col flex-1">
                 <div className="font-semibold text-gray-800" style={{ fontSize: productNameSize, fontWeight: productNameWeight, color: productNameColor }}>{item.name}</div>
                 {showProductDescription && item.description && <div className="text-sm text-gray-500 mt-1" style={{ fontSize: productDescSize, color: productDescColor }}>{item.description}</div>}
-                {showPrice && <div className="mt-2 font-bold" style={{ fontSize: productPriceSize, fontWeight: productPriceWeight, color: productPriceColor }}>{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.price)}</div>}
+                {showPrice && <div className="mt-2 font-bold" style={{ fontSize: productPriceSize, fontWeight: productPriceWeight, color: productPriceColor }}>{formatMenuPrice(item.price)}</div>}
+                <button
+                  onClick={() => handleOrder(item)}
+                  disabled={pendingId === item.id}
+                  className="mt-3 px-4 py-2 rounded-lg bg-[var(--theme-primary)] text-white font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {pendingId === item.id && <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                  <span>Pedir</span>
+                </button>
               </div>
             </div>
           ))}
@@ -177,10 +238,11 @@ export function DynamicElement({
     }
 
     // List layout (default)
+    const visibleCategories = categories.length > 0 ? categories : Object.keys(filteredByCategory);
     return (
-      <div style={{ ...baseStyle, maxHeight: height, overflow: 'auto' }} className="space-y-4 p-4">
-        {categories.map(cat => {
-          const items = itemsByCategory[cat] || [];
+      <div style={{ ...baseStyle, maxHeight: height, overflow: 'auto', gap: itemSpacing }} className="space-y-4 p-4">
+        {visibleCategories.map(cat => {
+          const items = (filteredByCategory[cat] || itemsByCategory[cat] || []).filter((item) => filteredMenuItems.includes(item));
           if (items.length === 0) return null;
           return (
             <div key={cat} className="space-y-2">
@@ -210,13 +272,13 @@ export function DynamicElement({
 
   if (type === 'category-tabs') {
     const { fontFamily = 'system-ui', fontSize = 14, fontWeight = 'medium', activeColor = '#FFFFFF', inactiveColor = '#666666', backgroundColor = '#FFFFFF', activeBackgroundColor = '#FF6B6B', borderRadius = 8, spacing = 8 } = config;
-    const [activeTab, setActiveTab] = useState(categories[0] || 'all');
-    
+    const activeTab = activeCategory ?? 'all';
+
     return (
       <div style={{ ...baseStyle, fontFamily }}>
-        <div className="flex gap-2 overflow-x-auto pb-2" style={{ paddingBottom: 8 }}>
+        <div className="flex gap-2 overflow-x-auto pb-2" style={{ paddingBottom: 8, gap: spacing }}>
           <button
-            onClick={() => setActiveTab('all')}
+            onClick={() => onCategoryChange?.('all')}
             className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${activeTab === 'all' ? 'text-white' : 'text-gray-600'}`}
             style={{ fontSize, fontWeight, color: activeTab === 'all' ? activeColor : inactiveColor, borderRadius, backgroundColor: activeTab === 'all' ? activeBackgroundColor : backgroundColor }}
           >
@@ -225,7 +287,7 @@ export function DynamicElement({
           {categories.map(cat => (
             <button
               key={cat}
-              onClick={() => setActiveTab(cat)}
+              onClick={() => onCategoryChange?.(cat)}
               className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${activeTab === cat ? 'text-white' : 'text-gray-600'}`}
               style={{ fontSize, fontWeight, color: activeTab === cat ? activeColor : inactiveColor, borderRadius, backgroundColor: activeTab === cat ? activeBackgroundColor : backgroundColor }}
             >
@@ -324,7 +386,7 @@ export function DynamicElement({
 
   if (type === 'search-bar') {
     const { placeholder = 'Buscar platos...', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'normal', color = '#2A2A2A', backgroundColor = '#FFFFFF', borderColor = '#E5E5E5', borderRadius = 12, showIcon = true } = config;
-    const [query, setQuery] = useState('');
+    const query = searchQuery ?? '';
 
     return (
       <div style={{ ...baseStyle, fontFamily }}>
@@ -335,21 +397,34 @@ export function DynamicElement({
             placeholder={placeholder}
             value={query}
             onChange={(e) => {
-              setQuery(e.target.value);
+              onSearchChange?.(e.target.value);
               onAction?.('search', e.target.value);
             }}
-            className={`w-full pl-${showIcon ? '10' : '4'} pr-4 py-3 rounded-xl border transition-colors`}
-            style={{ 
-              fontFamily, 
-              fontSize, 
-              fontWeight, 
-              color, 
-              backgroundColor, 
-              borderColor, 
+            className={`w-full pl-${showIcon ? '10' : '4'} pr-10 py-3 rounded-xl border transition-colors`}
+            style={{
+              fontFamily,
+              fontSize,
+              fontWeight,
+              color,
+              backgroundColor,
+              borderColor,
               borderRadius,
               borderWidth: 1,
             }}
           />
+          {query !== '' && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => {
+                onSearchChange?.('');
+                onAction?.('search', '');
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     );
@@ -357,7 +432,6 @@ export function DynamicElement({
 
   if (type === 'table-input') {
     const { placeholder = 'N° de mesa', buttonLabel = 'Entrar', fontFamily = 'system-ui', fontSize = 16, fontWeight = 'normal', color = '#2A2A2A', backgroundColor = '#FFFFFF', borderColor = '#E5E5E5', borderRadius = 12, buttonVariant = 'primary' } = config;
-    const [value, setValue] = useState('');
     const variantClass = BUTTON_VARIANTS[buttonVariant] || BUTTON_VARIANTS.primary;
     const mergedStyle = {
       ...baseStyle,
@@ -376,9 +450,9 @@ export function DynamicElement({
           inputMode="numeric"
           pattern="[0-9]*"
           placeholder={placeholder}
-          value={value}
-          onChange={(e) => setValue(e.target.value.replace(/[^0-9]/g, ''))}
-          onKeyDown={(e) => { if (e.key === 'Enter') onAction?.('submitTable', value); }}
+          value={tableInputValue}
+          onChange={(e) => setTableInputValue(e.target.value.replace(/[^0-9]/g, ''))}
+          onKeyDown={(e) => { if (e.key === 'Enter') onAction?.('submitTable', tableInputValue); }}
           className="flex-1 px-4 py-3 rounded-xl border transition-colors min-w-0"
           style={{
             fontFamily,
@@ -392,7 +466,7 @@ export function DynamicElement({
           }}
         />
         <button
-          onClick={() => onAction?.('submitTable', value)}
+          onClick={() => onAction?.('submitTable', tableInputValue)}
           className={`${variantClass} px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex-shrink-0`}
           style={{ fontFamily, fontSize, fontWeight, borderRadius }}
         >
@@ -463,9 +537,11 @@ export function DynamicPageRenderer({
   globalConfig = {},
   pageConfig = {},
 }) {
-  if (!page) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Página no encontrada</div>;
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  void pageConfig;
 
-  const { elements = [], config = {} } = page;
+  const { elements = [], config = {} } = page || {};
   const background = config.background_config || { type: 'color', value: '#FFFFFF' };
   const format = config.page_format || 'mobile-portrait';
   const pageDims = PAGE_DIMENSIONS[format] || PAGE_DIMENSIONS['mobile-portrait'];
@@ -525,6 +601,8 @@ export function DynamicPageRenderer({
     overflow: 'hidden',
   }), [scale, pageDims, backgroundStyleObj]);
 
+  if (!page) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Página no encontrada</div>;
+
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#f3f4f6', padding: '10px' }}>
       <div className="relative" style={containerStyle}>
@@ -540,6 +618,10 @@ export function DynamicPageRenderer({
             promotions={promotions}
             cart={cart}
             onAction={onAction}
+            activeCategory={activeCategory}
+            searchQuery={searchQuery}
+            onCategoryChange={setActiveCategory}
+            onSearchChange={setSearchQuery}
           />
         ))}
       </div>
