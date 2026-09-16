@@ -4,6 +4,8 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { Canvas } from '../../components/admin/canvas/Canvas';
 import { ElementPalette } from '../../components/admin/canvas/ElementPalette';
 import { ElementPropertiesPanel } from '../../components/admin/canvas/ElementPropertiesPanel';
+import { SimpleEditor } from '../../components/admin/canvas/SimpleEditor';
+import { DynamicPageRenderer } from '../../components/client/DynamicPageRenderer';
 import { useCanvas } from '../../hooks/useCanvas';
 import api from '../../services/api';
 import { isFeatureEnabled } from '../../utils/featureFlags';
@@ -20,6 +22,8 @@ export function CanvasEditor() {
   const [importFile, setImportFile] = useState(null);
   const [showPageSettings, setShowPageSettings] = useState(false);
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  // Editing mode: both tabs share the same theme state, so switching never loses data.
+  const [editorMode, setEditorMode] = useState('pro');
 
   // Hooks must be called at the top level - before any early returns
   const sensors = useSensors(
@@ -310,8 +314,8 @@ export function CanvasEditor() {
           ))}
         </div>
 
-        {/* Element Palette (collapsible) */}
-        {!leftSidebarCollapsed && (
+        {/* Element Palette (professional mode only) */}
+        {!leftSidebarCollapsed && editorMode === 'pro' && (
           <div className="border-t border-gray-200 flex-1 overflow-hidden">
             <div className="p-3 border-b border-gray-200 bg-gray-50">
               <h3 className="font-semibold text-gray-800">Elementos</h3>
@@ -332,6 +336,20 @@ export function CanvasEditor() {
             <div>
               <h2 className="font-semibold text-gray-800">Canvas Editor</h2>
               <p className="text-xs text-gray-500">Theme: {id} · Página: {activePage?.name} ({activePage?.type})</p>
+            </div>
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setEditorMode('simple')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${editorMode === 'simple' ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Simple
+              </button>
+              <button
+                onClick={() => setEditorMode('pro')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${editorMode === 'pro' ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Profesional
+              </button>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -439,6 +457,38 @@ export function CanvasEditor() {
         )}
 
         {/* Canvas Workspace */}
+        {editorMode === 'simple' ? (
+        <div className="flex-1 flex overflow-hidden">
+          <div className="w-[380px] shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
+            <SimpleEditor
+              activePage={activePage}
+              elements={elements}
+              globalConfig={globalConfig}
+              onUpdateElement={updateElement}
+              onUpdateGlobalConfig={setGlobalConfig}
+              onUpdatePageConfig={(patch) => setPageConfig(activePageId, patch)}
+              menuItems={[]}
+              categories={[]}
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto p-6" style={{ background: '#E5E5E5' }}>
+            <p className="mb-3 text-center text-xs text-gray-500">Vista previa en vivo</p>
+            <div className="mx-auto w-[430px] max-w-full rounded-[2rem] bg-gray-800 p-2 shadow-xl">
+              <div className="overflow-y-auto rounded-[1.5rem] bg-gray-100" style={{ height: 720 }}>
+                <DynamicPageRenderer
+                  key={activePageId}
+                  page={activePage}
+                  globalConfig={globalConfig}
+                  menuItems={[]}
+                  categories={[]}
+                  billData={null}
+                  onAction={() => {}}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        ) : (
         <div className="flex-1 flex overflow-auto p-4 bg-gray-100" style={{ background: '#E5E5E5' }}>
           <DndContext sensors={sensors} collisionDetection={closestCenter}>
             <Canvas
@@ -454,9 +504,11 @@ export function CanvasEditor() {
             />
           </DndContext>
         </div>
+        )}
       </main>
 
-      {/* Right Sidebar - Property Panel */}
+      {/* Right Sidebar - Property Panel (professional mode only) */}
+      {editorMode === 'pro' && (
       <aside className="w-80 bg-white border-l border-gray-200 flex flex-col">
         <ElementPropertiesPanel
           selectedId={selectedId}
@@ -465,11 +517,12 @@ export function CanvasEditor() {
           canvasSize={canvasSize}
           globalConfig={globalConfig}
           onUpdateElement={updateElement}
-          onUpdateCanvasConfig={setPageConfig}
+          onUpdateCanvasConfig={(patch) => setPageConfig(activePageId, patch)}
           onUpdateGlobalConfig={setGlobalConfig}
           activePageType={activePage?.type}
         />
       </aside>
+      )}
 
       {/* Import Modal */}
       {showImportModal && (

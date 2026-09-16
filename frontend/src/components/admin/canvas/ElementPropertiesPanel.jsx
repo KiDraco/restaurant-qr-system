@@ -46,7 +46,24 @@ const BACKGROUND_TYPE_LABELS = {
   image: 'Imagen',
 };
 
-function TextInput({ label, value, onChange, placeholder, error }) {
+// One-tap preset swatches shown under every color picker.
+// The onChange contract stays untouched: callers still receive { hex, opacity }.
+const PRESET_SWATCHES = [
+  '#FF6B6B',
+  '#E4572E',
+  '#7B2D43',
+  '#B08968',
+  '#D9A441',
+  '#6B7F3E',
+  '#2D6A4F',
+  '#1B7FA6',
+  '#4ECDC4',
+  '#414E5C',
+  '#2A2A2A',
+  '#FFFFFF',
+];
+
+export function TextInput({ label, value, onChange, placeholder, error }) {
   return (
     <div className="mb-4">
       <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
@@ -88,7 +105,7 @@ function NumberInput({ label, value, onChange, min, max, step, unit = 'px', erro
   );
 }
 
-function ColorInput({ label, value, onChange, showOpacity = true }) {
+export function ColorInput({ label, value, onChange, showOpacity = true }) {
   const [hex, setHex] = React.useState(value?.hex || '#000000');
   const [opacity, setOpacity] = React.useState(value?.opacity ?? 1);
 
@@ -150,6 +167,18 @@ function ColorInput({ label, value, onChange, showOpacity = true }) {
           )}
         </div>
       </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {PRESET_SWATCHES.map((swatch) => (
+          <button
+            key={swatch}
+            type="button"
+            title={swatch}
+            onClick={() => { setHex(swatch); onChange({ hex: swatch, opacity }); }}
+            className={`h-6 w-6 rounded-full border transition ${swatch.toLowerCase() === (hex || '').toLowerCase() ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-300 hover:border-gray-400'}`}
+            style={{ backgroundColor: swatch }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -191,7 +220,7 @@ function ToggleInput({ label, value, onChange, description }) {
   );
 }
 
-function FileInput({ label, value, onChange, accept, preview }) {
+export function FileInput({ label, value, onChange, accept, preview }) {
   return (
     <div className="mb-4">
       <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
@@ -217,7 +246,7 @@ function FileInput({ label, value, onChange, accept, preview }) {
   );
 }
 
-function SectionTitle({ title }) {
+export function SectionTitle({ title }) {
   return (
     <h4 className="text-sm font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-100 flex items-center gap-2">
       <span className="w-1 h-5 bg-blue-600 rounded-full"></span>
