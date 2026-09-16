@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ChevronLeft, UtensilsCrossed, Bell, Receipt, DollarSign, Search, ShoppingCart, Star, X, Loader2, Menu as MenuIcon, Check } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ChevronLeft, UtensilsCrossed, Bell, Receipt, DollarSign, Search } from 'lucide-react';
 import { PAGE_DIMENSIONS } from '../../hooks/useCanvas';
-
-const API_URL = '/api';
 
 // Icon mapping for action buttons
 const ACTION_ICONS = {
@@ -36,13 +34,6 @@ const BUTTON_SIZES = {
   lg: 'px-6 py-4 text-lg',
   xl: 'px-8 py-5 text-xl',
 };
-
-/**
- * Merges element base style with extra styles into one object (avoids React duplicate-style bug)
- */
-function mergeStyle(base, extra) {
-  return { ...base, ...extra };
-}
 
 /**
  * Renders a single element from canvas_json with dynamic data
