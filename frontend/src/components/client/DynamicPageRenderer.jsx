@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, UtensilsCrossed, Bell, Receipt, DollarSign, Search, RotateCw, X, Minus, Plus, Trash2 } from 'lucide-react';
 import { PAGE_DIMENSIONS } from '../../hooks/useCanvas';
 
@@ -61,6 +61,8 @@ export function DynamicElement({
   // Local state kept at the top level so hooks never run conditionally.
   const [tableInputValue, setTableInputValue] = useState('');
   const [pendingId, setPendingId] = useState(null);
+  const [confirmArmed, setConfirmArmed] = useState(false);
+  const confirmTimer = useRef(null);
 
   // Group menu items by category (used by menu-list).
   const itemsByCategory = useMemo(() => {
@@ -259,19 +261,23 @@ export function DynamicElement({
     if (layout === 'grid') {
       return (
         <div style={{ ...baseStyle, maxHeight: height, overflow: 'auto', gap: itemSpacing }} className="grid grid-cols-2 gap-4 p-4">
-          {filteredMenuItems.map(item => (
-            <div key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm flex flex-col">
-              {showProductImage && item.image_url && (
-                <img src={item.image_url} alt={item.name} className="w-full object-cover" style={{ height: productImageHeight, borderRadius: productImageRadius }} />
-              )}
-              <div className="p-3 flex flex-col flex-1">
-                <div className="font-semibold text-gray-800" style={{ fontSize: productNameSize, fontWeight: productNameWeight, color: productNameColor }}>{item.name}</div>
-                {showProductDescription && item.description && <div className="text-sm text-gray-500 mt-1" style={{ fontSize: productDescSize, color: productDescColor }}>{item.description}</div>}
-                {showPrice && <div className="mt-2 font-bold" style={{ fontSize: productPriceSize, fontWeight: productPriceWeight, color: productPriceColor }}>{formatMenuPrice(item.price)}</div>}
-                {renderStepper(item, 'center')}
+          {filteredMenuItems.map(item => {
+            const ordered = (billData?.orders || []).reduce((s, o) => s + ((o.item_name === item.name) ? (Number(o.quantity) || 0) : 0), 0);
+            return (
+              <div key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm flex flex-col">
+                {showProductImage && item.image_url && (
+                  <img src={item.image_url} alt={item.name} className="w-full object-cover" style={{ height: productImageHeight, borderRadius: productImageRadius }} />
+                )}
+                <div className="p-3 flex flex-col flex-1">
+                  <div className="font-semibold text-gray-800" style={{ fontSize: productNameSize, fontWeight: productNameWeight, color: productNameColor }}>{item.name}</div>
+                  {showProductDescription && item.description && <div className="text-sm text-gray-500 mt-1" style={{ fontSize: productDescSize, color: productDescColor }}>{item.description}</div>}
+                  {showPrice && <div className="mt-2 font-bold" style={{ fontSize: productPriceSize, fontWeight: productPriceWeight, color: productPriceColor }}>{formatMenuPrice(item.price)}</div>}
+                  {ordered > 0 && <div className="text-xs font-semibold text-emerald-700 mt-1">En cuenta ×{ordered}</div>}
+                  {renderStepper(item, 'center')}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       );
     }
@@ -290,21 +296,25 @@ export function DynamicElement({
                   {cat}
                 </div>
               )}
-              {items.map(item => (
-                <div key={item.id} className="flex gap-3 p-2 bg-white rounded-lg shadow-sm" onClick={() => handleOrder(item)}>
-                  {showProductImage && item.image_url && (
-                    <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-lg flex-shrink-0" style={{ borderRadius: productImageRadius }} />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-gray-800 truncate" style={{ fontSize: productNameSize, fontWeight: productNameWeight, color: productNameColor }}>{item.name}</div>
-                    {showProductDescription && item.description && <div className="text-sm text-gray-500 mt-1 truncate" style={{ fontSize: productDescSize, color: productDescColor }}>{item.description}</div>}
-                    {showPrice && <div className="mt-1 font-bold" style={{ fontSize: productPriceSize, fontWeight: productPriceWeight, color: productPriceColor }}>{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.price)}</div>}
+              {items.map(item => {
+                const ordered = (billData?.orders || []).reduce((s, o) => s + ((o.item_name === item.name) ? (Number(o.quantity) || 0) : 0), 0);
+                return (
+                  <div key={item.id} className="flex gap-3 p-2 bg-white rounded-lg shadow-sm" onClick={() => handleOrder(item)}>
+                    {showProductImage && item.image_url && (
+                      <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-lg flex-shrink-0" style={{ borderRadius: productImageRadius }} />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-gray-800 truncate" style={{ fontSize: productNameSize, fontWeight: productNameWeight, color: productNameColor }}>{item.name}</div>
+                      {showProductDescription && item.description && <div className="text-sm text-gray-500 mt-1 truncate" style={{ fontSize: productDescSize, color: productDescColor }}>{item.description}</div>}
+                      {showPrice && <div className="mt-1 font-bold" style={{ fontSize: productPriceSize, fontWeight: productPriceWeight, color: productPriceColor }}>{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.price)}</div>}
+                      {ordered > 0 && <div className="text-xs font-semibold text-emerald-700 mt-1">En cuenta ×{ordered}</div>}
+                    </div>
+                    <div className="flex flex-col items-end justify-center flex-shrink-0">
+                      {renderStepper(item)}
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end justify-center flex-shrink-0">
-                    {renderStepper(item)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })}
@@ -567,12 +577,30 @@ export function DynamicElement({
     const formatPrice = (price) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(price || 0);
     const listMaxHeight = Math.max(120, height - 260);
 
+    // Two-tap confirm: first tap arms ("envía a cocina"), second tap fires
+    const disarmConfirm = () => {
+      if (confirmTimer.current) clearTimeout(confirmTimer.current);
+      confirmTimer.current = null;
+      setConfirmArmed(false);
+    };
+    const handleConfirmTap = () => {
+      if (confirmArmed) {
+        disarmConfirm();
+        onAction?.('cartConfirm');
+        onToggleCart?.(false);
+      } else {
+        setConfirmArmed(true);
+        if (confirmTimer.current) clearTimeout(confirmTimer.current);
+        confirmTimer.current = setTimeout(() => setConfirmArmed(false), 3500);
+      }
+    };
+
     return (
       <div style={{ ...baseStyle, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', overflow: 'hidden' }}>
         <div style={{ backgroundColor, borderTopLeftRadius: borderRadius, borderTopRightRadius: borderRadius, display: 'flex', flexDirection: 'column', maxHeight: height - 60, overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
             <span style={{ fontSize: 18, fontWeight: 'bold', color: textColor }}>{title}</span>
-            <button type="button" aria-label="Cerrar" onClick={() => onToggleCart?.(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6', color: textColor }}>
+            <button type="button" aria-label="Cerrar" onClick={() => { disarmConfirm(); onToggleCart?.(false); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6', color: textColor }}>
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -605,8 +633,8 @@ export function DynamicElement({
           )}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
             <span style={{ fontSize: 16, fontWeight: 'bold', color: textColor }}>Total: {formatPrice(total)}</span>
-            <button type="button" onClick={() => { onAction?.('cartConfirm'); onToggleCart?.(false); }} disabled={lines.length === 0} style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 12, paddingBottom: 12, borderRadius: 12, backgroundColor: confirmBackgroundColor, color: confirmTextColor, fontSize: 15, fontWeight: 'semibold', opacity: lines.length === 0 ? 0.5 : 1 }}>
-              {confirmLabel}
+            <button type="button" onClick={handleConfirmTap} disabled={lines.length === 0} style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 12, paddingBottom: 12, borderRadius: 12, backgroundColor: confirmArmed ? '#B45309' : confirmBackgroundColor, color: confirmTextColor, fontSize: 15, fontWeight: 'semibold', opacity: lines.length === 0 ? 0.5 : 1 }}>
+              {confirmArmed ? 'Tocá de nuevo para enviar' : confirmLabel}
             </button>
           </div>
         </div>
