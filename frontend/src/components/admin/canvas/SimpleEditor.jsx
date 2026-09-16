@@ -1,6 +1,7 @@
 /* eslint-disable */
-import React from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Eye, EyeOff, Smartphone } from 'lucide-react';
+import { DynamicPageRenderer } from '../../client/DynamicPageRenderer';
 import { CURATED_PALETTES } from '../../../utils/palettes';
 import { TextInput, ColorInput, FileInput, SectionTitle } from './ElementPropertiesPanel';
 
@@ -131,7 +132,12 @@ export function SimpleEditor({
   const pageBg = activePage?.config?.background_config || { type: 'color', value: '#FFFFFF' };
   const safeElements = Array.isArray(elements) ? elements : [];
 
+  // Track which action-button is tapped in the preview so the "Botones"
+  // color control applies buttonColor to that specific element, not the global color.
+  const [selectedActionId, setSelectedActionId] = useState(null);
+
   // Palette apply: theme colors plus active-page background, nothing else changes.
+  // Button instance colors stay per-element so each action can differ.
   const applyPalette = (palette) => {
     onUpdateGlobalConfig({ colors: { ...palette.colors } });
     onUpdatePageConfig({ background_config: { ...palette.pageBg } });
@@ -143,6 +149,16 @@ export function SimpleEditor({
 
   const updateColorPart = (key) => (v) => {
     onUpdateGlobalConfig({ colors: { ...colors, [key]: v.hex } });
+  };
+
+  // When the user picks a color in the "Botones" row, apply it as buttonColor
+  // to the selected action-button instance (so each button can differ).
+  const applyButtonColor = (v) => {
+    if (selectedActionId) {
+      onUpdateElement(selectedActionId, { config: { ...(safeElements.find((el) => el.id === selectedActionId)?.config || {}), buttonColor: v.hex } });
+    } else {
+      updateColorPart('primary')(v);
+    }
   };
 
   const toggleVisible = (el) => {
@@ -183,6 +199,14 @@ export function SimpleEditor({
     });
   };
 
+  // Phone-frame preview of the active page so action-buttons can be tapped
+  // to select them for per-button color (instead of changing global color).
+  const previewPage = useMemo(() => ({
+    type: activePage?.type,
+    elements: safeElements.filter((el) => el.visible !== false),
+    config: activePage?.config || {},
+  }), [activePage, safeElements]);
+
   return (
     <div className="space-y-6 p-4">
       <div>
@@ -213,9 +237,9 @@ export function SimpleEditor({
       <div>
         <SectionTitle title="Retoque por parte" />
         <ColorInput
-          label="Botones"
-          value={{ hex: colors.primary || '#FF6B6B', opacity: 1 }}
-          onChange={updateColorPart('primary')}
+          label={selectedActionId ? 'Color del botón seleccionado' : 'Botones (global)'}
+          value={{ hex: selectedActionId ? (safeElements.find((el) => el.id === selectedActionId)?.config?.buttonColor || colors.primary || '#FFFFFF') : (colors.primary || '#FF6B6B'), opacity: 1 }}
+          onChange={applyButtonColor}
         />
         <ColorInput
           label="Secundario"
@@ -300,7 +324,18 @@ export function SimpleEditor({
                   <p className="text-xs text-gray-400">Contenido automático</p>
                 ) : (
                   <div className={hidden ? 'pointer-events-none opacity-50' : ''}>
-                    <SimpleElementBody element={el} onUpdateElement={onUpdateElement} />
+                    <div
+                      onClick={() => {
+                        if (el.type === 'action-button') setSelectedActionId((cur) => (cur === el.id ? null : el.id));
+                      }}
+                      className={el.type === 'action-button' ? 'cursor-pointer rounded border-2 p-2 transition' : ''}
+                      style={el.type === 'action-button' ? { borderColor: selectedActionId === el.id ? '#3B82F6' : '#E5E7EB' } : {}}
+                    >
+                      <SimpleElementBody element={el} onUpdateElement={onUpdateElement} />
+                      {el.type === 'action-button' && (
+                        <p className="text-xs text-blue-600 mt-1">{selectedActionId === el.id ? 'Color aplicado a este botón' : 'Tocá para elegir color'}</p>
+                      )}
+                    </div>
                     {el.type !== 'text' && el.type !== 'image' && el.type !== 'logo' && el.type !== 'category' && el.type !== 'action-button' && el.type !== 'table-input' && (
                       <p className="text-xs text-gray-400">Se edita en modo Profesional</p>
                     )}
@@ -310,6 +345,29 @@ export function SimpleEditor({
             );
           })}
         </div>
+      </div>
+
+      {/* Phone preview: action-buttons are tapable to select per-button color */}
+      <div className="flex flex-col items-center">
+        <SectionTitle title="Vista previa (tocá un botón para asignarle color)" />
+        <div className="overflow-hidden rounded-2xl shadow-lg" style={{ width: 280, height: 500, background: '#f3f4f6' }}>
+          <DynamicPageRenderer
+            page={previewPage}
+            globalConfig={globalConfig}
+            onAction={() => {}}
+            cartOpen={false}
+            onToggleCart={() => {}}
+            activeCategory="all"
+            searchQuery=""
+            onCategoryChange={() => {}}
+            onSearchChange={() => {}}
+          />
+        </div>
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          {selectedActionId
+            ? 'Color seleccionado → aplica al botón activo arriba'
+            : 'Cada botón de la vista previa es tocable en el panel de contenido'}
+        </p>
       </div>
     </div>
   );
