@@ -245,12 +245,11 @@ export const DEFAULT_ELEMENT_CONFIG = {
 };
 
 function getDefaultPosition(existingElements, canvasWidth, canvasHeight) {
-  const centerX = canvasWidth / 2;
-  const centerY = canvasHeight / 2;
-  const stagger = existingElements.length * 30;
+  // Place new elements at top-left with slight stagger based on count
+  const stagger = existingElements.length * 20;
   return {
-    x: Math.max(20, Math.min(centerX - 150 + stagger, canvasWidth - 320)),
-    y: Math.max(20, Math.min(centerY - 100 + stagger, canvasHeight - 220)),
+    x: 40 + stagger,
+    y: 40 + stagger,
   };
 }
 
