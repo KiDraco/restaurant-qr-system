@@ -400,7 +400,7 @@ export function CanvasElement({
       style={style}
       transform={`translate(${element.x}, ${element.y})`}
     >
-      <g ref={elementRef} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => { e.stopPropagation(); onSelect(element.id); }}>
+      <g ref={elementRef} onPointerDown={(e) => true} onMouseDown={(e) => { e.stopPropagation(); onSelect(element.id); }}>
         {content}
       </g>
       
