@@ -399,7 +399,7 @@ export function CanvasElement({
       onContextMenu={handleContextMenu}
       style={style}
     >
-      <g ref={elementRef} onPointerDown={(e) => true} onMouseDown={(e) => { e.stopPropagation(); onSelect(element.id); }}>
+      <g ref={elementRef} onPointerDown={() => {}} onMouseDown={(e) => { e.stopPropagation(); onSelect(element.id); }}>
         {content}
       </g>
       
