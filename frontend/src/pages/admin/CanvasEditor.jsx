@@ -4,6 +4,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { Canvas } from '../../components/admin/canvas/Canvas';
 import { ElementPalette } from '../../components/admin/canvas/ElementPalette';
 import { ElementPropertiesPanel } from '../../components/admin/canvas/ElementPropertiesPanel';
+import { LayersPanel } from '../../components/admin/canvas/LayersPanel';
 import { SimpleEditor } from '../../components/admin/canvas/SimpleEditor';
 import { DynamicPageRenderer } from '../../components/client/DynamicPageRenderer';
 import { useCanvas } from '../../hooks/useCanvas';
@@ -485,6 +486,15 @@ export function CanvasEditor() {
                onAddElement={addElement}
                mode="simple"
              />
+             <div className="p-3 border-t border-gray-200">
+               <LayersPanel
+                 elements={elements}
+                 selectedId={selectedId}
+                 onSelectElement={selectElement}
+                 onUpdateElement={updateElement}
+                 onMoveElementLayer={moveElementInLayer}
+               />
+             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-6" style={{ background: '#E5E5E5' }}>
             <p className="mb-3 text-center text-xs text-gray-500">Vista previa en vivo</p>
@@ -525,6 +535,15 @@ export function CanvasEditor() {
       {/* Right Sidebar - Property Panel (professional mode only) */}
       {editorMode === 'pro' && (
       <aside className="w-80 bg-white border-l border-gray-200 flex flex-col">
+        <div className="border-b border-gray-200 p-3">
+          <LayersPanel
+            elements={elements}
+            selectedId={selectedId}
+            onSelectElement={selectElement}
+            onUpdateElement={updateElement}
+            onMoveElementLayer={moveElementInLayer}
+          />
+        </div>
         <ElementPropertiesPanel
           selectedId={selectedId}
           elements={elements}
