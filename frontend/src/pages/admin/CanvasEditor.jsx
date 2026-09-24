@@ -60,6 +60,15 @@ export function CanvasEditor() {
     PAGE_TYPES,
   } = useCanvas();
 
+  // Persist the exact drop position when a free drag ends.
+  const handleDragEnd = (event) => {
+    const { active, delta } = event;
+    if (!active || !delta || (delta.x === 0 && delta.y === 0)) return;
+    const el = elements.find(e => e.id === active.id);
+    if (!el || el.locked) return;
+    updateElement(el.id, { x: el.x + delta.x, y: el.y + delta.y });
+  };
+
   // Ref para evitar re-carga infinita del mismo theme
   const loadedIdRef = useRef(null);
 
@@ -496,7 +505,7 @@ export function CanvasEditor() {
         </div>
         ) : (
         <div className="flex-1 flex overflow-auto p-4 bg-gray-100" style={{ background: '#E5E5E5' }}>
-          <DndContext sensors={sensors} collisionDetection={closestCenter}>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <Canvas
               elements={elements}
               selectedId={selectedId}

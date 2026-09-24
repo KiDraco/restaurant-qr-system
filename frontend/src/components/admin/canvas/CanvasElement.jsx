@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
 import { ImageElement } from './elements/ImageElement';
 import { TextElement } from './elements/TextElement';
 import { CategoryElement } from './elements/CategoryElement';
@@ -310,10 +309,12 @@ export function CanvasElement({
   });
 
   const style = useMemo(() => ({
-    transform: CSS.Transform.toString(transform),
+    // Combine persisted position (x,y) with live drag delta so elements render
+    // at their saved spot and follow the pointer exactly while dragging.
+    transform: `translate(${element.x + (transform?.x || 0)}px, ${element.y + (transform?.y || 0)}px)`,
     transition: dndIsDragging ? 'none' : transition || 'transform 0.1s ease-out',
     pointerEvents: element.locked ? 'none' : 'auto',
-  }), [transform, transition, dndIsDragging, element.locked]);
+  }), [transform, transition, dndIsDragging, element.locked, element.x, element.y]);
 
   const handleDragStart = () => setIsDragging(true);
   const handleDragEnd = () => setIsDragging(false);
@@ -399,7 +400,7 @@ export function CanvasElement({
       onContextMenu={handleContextMenu}
       style={style}
     >
-      <g ref={elementRef} onPointerDown={(e) => true} onMouseDown={(e) => { e.stopPropagation(); onSelect(element.id); }}>
+      <g ref={elementRef} onPointerDown={() => {}} onMouseDown={(e) => { e.stopPropagation(); onSelect(element.id); }}>
         {content}
       </g>
       
