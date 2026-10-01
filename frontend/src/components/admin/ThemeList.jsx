@@ -1,7 +1,151 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { Trash2, Edit, Copy, Download, Upload, Eye, CheckCircle } from 'lucide-react';
+import { DynamicPageRenderer } from '../../components/client/DynamicPageRenderer';
+import { PAGE_DIMENSIONS } from '../../hooks/useCanvas';
+
+function deriveGlobalConfig(theme) {
+  let config = theme?.config || {};
+  if (typeof config === 'string') {
+    try { config = JSON.parse(config); } catch { config = {}; }
+  }
+  return {
+    colors: config.colors || { primary: '#FF6B6B', secondary: '#4ECDC4', background: '#FFFFFF', text: '#2A2A2A' },
+    font_family: config.font_family || 'system-ui',
+    background_config: config.background_type
+      ? { type: config.background_type, value: config.background_value }
+      : { type: 'color', value: config.colors?.background || '#FFFFFF' },
+  };
+}
+
+function getCanvasPreview(theme) {
+  if (!theme?.canvas_json) return null;
+  let canvas;
+  try {
+    canvas = typeof theme.canvas_json === 'string' ? JSON.parse(theme.canvas_json) : theme.canvas_json;
+  } catch {
+    return null;
+  }
+  if (!canvas) return null;
+  if (Array.isArray(canvas.pages) && canvas.pages.length > 0) {
+    return { pages: canvas.pages, globalConfig: canvas.globalConfig || deriveGlobalConfig(theme) };
+  }
+  if (Array.isArray(canvas.elements)) {
+    const page = {
+      id: 'menu',
+      name: 'Menú',
+      type: 'menu',
+      elements: canvas.elements,
+      config: {
+        page_format: canvas.page_format || theme.page_format || 'A4-portrait',
+        background_config: canvas.background_config || { type: 'color', value: '#FFFFFF' },
+      },
+    };
+    return { pages: [page], globalConfig: canvas.globalConfig || deriveGlobalConfig(theme) };
+  }
+  return null;
+}
+
+// Extraer colores del theme (config o canvas)
+function getThemeColors(theme) {
+  let config = theme.config || {};
+  if (typeof config === 'string') {
+    try { config = JSON.parse(config); } catch { config = {}; }
+  }
+  const canvas = getCanvasPreview(theme);
+  const canvasBg = canvas?.globalConfig?.background_config;
+  const canvasBgValue = typeof canvasBg?.value === 'string' ? canvasBg.value : undefined;
+  return {
+    primary: config.colors?.primary || '#FF6B6B',
+    secondary: config.colors?.secondary || '#4ECDC4',
+    background: config.colors?.background || canvasBgValue || '#FFFFFF',
+    text: config.colors?.text || '#2A2A2A',
+    font: config.font_family || 'system',
+  };
+}
+
+function ThemePreview({ theme, normalized }) {
+  const pages = normalized.pages;
+  const [pageIndex, setPageIndex] = useState(() =>
+    pages.reduce((best, p, i, arr) => (p.elements?.length || 0) > (arr[best].elements?.length || 0) ? i : best, 0)
+  );
+  const page = pages[pageIndex] || pages[0];
+  const dims = PAGE_DIMENSIONS[page.config?.page_format] || PAGE_DIMENSIONS['mobile-portrait'];
+  const colors = getThemeColors(theme);
+  const boxRef = useRef(null);
+  const [boxW, setBoxW] = useState(0);
+
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    setBoxW(el.clientWidth);
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect?.width;
+      if (width) setBoxW(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const goTo = (delta) => setPageIndex((i) => (i + delta + pages.length) % pages.length);
+  const visibleElements = (page.elements || []).filter((el) => el.visible !== false);
+
+  return (
+    <div
+      ref={boxRef}
+      className="relative w-full overflow-hidden border border-gray-200 bg-gray-50"
+      style={{ aspectRatio: `${dims.width} / ${dims.height}` }}
+    >
+      {boxW > 0 && (
+        <DynamicPageRenderer
+          page={{ ...page, elements: visibleElements }}
+          globalConfig={normalized.globalConfig}
+          embedded
+          scale={boxW / dims.width}
+          menuItems={[]}
+          categories={[]}
+          billData={null}
+          onAction={() => {}}
+        />
+      )}
+      {/* Badge formato de la página */}
+      <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 text-xs font-medium rounded bg-white/90 backdrop-blur-sm text-gray-700">
+        {page.config?.page_format || 'A4'}
+      </div>
+      {/* Selector de páginas (solo temas multi-página) */}
+      {pages.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 bg-white/90 backdrop-blur rounded-full px-1.5 py-0.5 text-xs shadow">
+          <button
+            type="button"
+            title="Página anterior"
+            onClick={(e) => { e.stopPropagation(); goTo(-1); }}
+            className="px-1 text-gray-600 hover:text-gray-900"
+          >
+            ◀
+          </button>
+          <span className="text-gray-700 max-w-[90px] truncate">{page.name}</span>
+          <button
+            type="button"
+            title="Página siguiente"
+            onClick={(e) => { e.stopPropagation(); goTo(1); }}
+            className="px-1 text-gray-600 hover:text-gray-900"
+          >
+            ▶
+          </button>
+        </div>
+      )}
+      {/* Paleta de colores del theme - barra inferior */}
+      <div className="absolute bottom-0 inset-x-0 h-2.5 flex" style={{ background: 'rgba(0,0,0,0.08)' }}>
+        <div className="flex-1" style={{ background: colors.primary }} title="Primario" />
+        <div className="flex-1" style={{ background: colors.secondary }} title="Secundario" />
+        <div className="flex-1" style={{ background: colors.background }} title="Fondo" />
+        <div className="flex-1" style={{ background: colors.text }} title="Texto" />
+      </div>
+    </div>
+  );
+}
 
 function ThemeList({ onEditTheme }) {
   const navigate = useNavigate();
@@ -123,215 +267,6 @@ const handleNewTheme = async () => {
     reader.readAsText(file);
   };
 
-  const getCanvasPreview = (theme) => {
-    if (!theme.canvas_json) return null;
-    try {
-      const canvas = typeof theme.canvas_json === 'string' ? JSON.parse(theme.canvas_json) : theme.canvas_json;
-      if (!canvas.elements || !canvas.elements.length) return null;
-      return canvas;
-    } catch {
-      return null;
-    }
-  };
-
-  // Extraer colores del theme (config o canvas)
-  const getThemeColors = (theme) => {
-    const config = theme.config || {};
-    const canvas = getCanvasPreview(theme);
-    const canvasBg = canvas?.background_config;
-    return {
-      primary: config.colors?.primary || '#FF6B6B',
-      secondary: config.colors?.secondary || '#4ECDC4',
-      background: config.colors?.background || canvasBg?.value || '#FFFFFF',
-      text: config.colors?.text || '#2A2A2A',
-      font: config.font_family || 'system',
-    };
-  };
-
-  const renderPreview = (canvas, theme) => {
-    const colors = getThemeColors(theme);
-    const bg = canvas?.background_config || { type: 'color', value: colors.background };
-    const elements = canvas?.elements || [];
-    
-    return (
-      <div className="relative w-full aspect-[794/1123] rounded overflow-hidden border border-gray-200 bg-gray-50">
-        {/* Fondo del theme */}
-        <div className="absolute inset-0" style={{
-          background: bg.type === 'gradient' 
-            ? `linear-gradient(135deg, ${bg.value?.from || colors.primary}, ${bg.value?.to || colors.secondary})`
-            : bg.type === 'image' && bg.value
-              ? `url(${bg.value})`
-              : bg.value || colors.background,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }} />
-        {/* Elementos del canvas - renderizado por tipo */}
-        <svg width="100%" height="100%" viewBox="0 0 794 1123" preserveAspectRatio="xMidYMid meet" className="w-full h-full">
-          {elements
-            .slice()
-            .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
-            .map(el => {
-              const x = (el.x || 0) / 794 * 100;
-              const y = (el.y || 0) / 1123 * 100;
-              const w = (el.width || 0) / 794 * 100;
-              const h = (el.height || 0) / 1123 * 100;
-              const cfg = el.config || {};
-              
-              // Texto: mostrar como texto real truncado
-              if (el.type === 'text') {
-                const content = cfg.content || 'Texto';
-                const fontSize = Math.max(4, (cfg.fontSize || 16) * 0.15); // escalado para preview
-                const fontFamily = cfg.fontFamily || 'system-ui';
-                const fontWeight = cfg.fontWeight || 'normal';
-                const color = cfg.color || colors.text;
-                const align = cfg.textAlign || 'left';
-                const lines = content.split('\n').slice(0, 3); // máx 3 líneas
-                return (
-                  <g key={el.id} transform={`translate(${x}%, ${y}%)`}>
-                    <rect x="0" y="0" width={`${w}%`} height={`${h}%`} fill="transparent" />
-                    {lines.map((line, i) => (
-                      <text
-                        key={i}
-                        x="0"
-                        y={`${i * (fontSize * 1.3)}`}
-                        fontSize={fontSize}
-                        fontFamily={fontFamily}
-                        fontWeight={fontWeight}
-                        fill={color}
-                        textAnchor={align === 'center' ? 'middle' : align === 'right' ? 'end' : 'start'}
-                        dominantBaseline="hanging"
-                        style={{ width: `${w}%`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                      >
-                        {line.length > 30 ? line.slice(0, 30) + '…' : line}
-                      </text>
-                    ))}
-                  </g>
-                );
-              }
-              
-              // Imagen: mostrar la imagen real o placeholder
-              if (el.type === 'image') {
-                const src = cfg.src;
-                const radius = cfg.borderRadius || 0;
-                return (
-                  <g key={el.id}>
-                    {src ? (
-                      <image
-                        x={`${x}%`}
-                        y={`${y}%`}
-                        width={`${w}%`}
-                        height={`${h}%`}
-                        href={src}
-                        rx={radius}
-                        ry={radius}
-                        style={{ objectFit: cfg.objectFit || 'cover' }}
-                        opacity={cfg.opacity ?? 1}
-                      />
-                    ) : (
-                      // Placeholder para imagen sin src
-                      <>
-                        <rect
-                          x={`${x}%`}
-                          y={`${y}%`}
-                          width={`${w}%`}
-                          height={`${h}%`}
-                          fill="#F3F4F6"
-                          stroke="#D1D5DB"
-                          strokeWidth="0.5"
-                          strokeDasharray="2,2"
-                          rx={radius}
-                          ry={radius}
-                        />
-                        <text
-                          x={`${x + w/2}%`}
-                          y={`${y + h/2}%`}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          fontSize={Math.max(4, w * 0.15)}
-                          fill="#9CA3AF"
-                          fontFamily="system-ui"
-                        >
-                          📷
-                        </text>
-                      </>
-                    )}
-                  </g>
-                );
-              }
-              
-              // Categoría: barra con label
-              if (el.type === 'category') {
-                const label = cfg.label || 'Categoría';
-                const fontSize = Math.max(4, (cfg.fontSize || 18) * 0.15);
-                const fontFamily = cfg.fontFamily || 'system-ui';
-                const fontWeight = cfg.fontWeight || 'bold';
-                const color = cfg.color || colors.primary;
-                const showSep = cfg.separator !== false;
-                return (
-                  <g key={el.id}>
-                    <rect
-                      x={`${x}%`}
-                      y={`${y}%`}
-                      width={`${w}%`}
-                      height={`${h}%`}
-                      fill={cfg.background || 'transparent'}
-                      opacity={cfg.opacity ?? 1}
-                      rx={cfg.borderRadius || 0}
-                    />
-                    <text
-                      x={`${x + 2}%`}
-                      y={`${y + h/2}%`}
-                      dominantBaseline="middle"
-                      fontSize={fontSize}
-                      fontFamily={fontFamily}
-                      fontWeight={fontWeight}
-                      fill={color}
-                      style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                    >
-                      {label.length > 25 ? label.slice(0, 25) + '…' : label}
-                    </text>
-                    {showSep && (
-                      <line
-                        x1={`${x}%`}
-                        y1={`${y + h}%`}
-                        x2={`${x + w}%`}
-                        y2={`${y + h}%`}
-                        stroke={color}
-                        strokeWidth="0.5"
-                        opacity={0.5}
-                      />
-                    )}
-                  </g>
-                );
-              }
-              
-              // Otros elementos (decorative, etc.): rectángulo simple
-              const bgColor = cfg.color || cfg.background || colors.primary;
-              return (
-                <rect
-                  key={el.id}
-                  x={`${x}%`}
-                  y={`${y}%`}
-                  width={`${w}%`}
-                  height={`${h}%`}
-                  fill={bgColor}
-                  opacity={0.5}
-                  rx={cfg.borderRadius || 0}
-                />
-              );
-            })}
-        </svg>
-        {/* Paleta de colores del theme - barra inferior */}
-        <div className="absolute bottom-0 left-0 right-0 h-3 flex" style={{ background: 'rgba(0,0,0,0.08)' }}>
-          <div className="flex-1" style={{ background: colors.primary }} title="Primary" />
-          <div className="flex-1" style={{ background: colors.secondary }} title="Secondary" />
-          <div className="flex-1" style={{ background: colors.background }} title="Background" />
-          <div className="flex-1" style={{ background: colors.text }} title="Text" />
-        </div>
-      </div>
-    );
-  };
-
   if (loading) return <div className="p-4">Cargando themes...</div>;
   if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
 
@@ -354,23 +289,22 @@ const handleNewTheme = async () => {
           return (
             <div key={t.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
 {/* Preview */}
-              <div className="relative aspect-[794/1123] bg-gray-100 overflow-hidden">
-                {renderPreview(getCanvasPreview(t), t)}
-                {!getCanvasPreview(t) && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50">
-                    <div className="flex gap-1">
-                      <div className="w-6 h-6 rounded" style={{ background: t.config?.colors?.primary || '#FF6B6B' }} title="Primary" />
-                      <div className="w-6 h-6 rounded" style={{ background: t.config?.colors?.secondary || '#4ECDC4' }} title="Secondary" />
-                      <div className="w-6 h-6 rounded" style={{ background: t.config?.colors?.background || '#FFFFFF' }} title="Background" />
-                      <div className="w-6 h-6 rounded" style={{ background: t.config?.colors?.text || '#2A2A2A' }} title="Text" />
+              <div className="relative">
+                {canvas ? (
+                  <ThemePreview theme={t} normalized={canvas} />
+                ) : (
+                  <div className="relative aspect-[794/1123] bg-gray-100 overflow-hidden">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50">
+                      <div className="flex gap-1">
+                        <div className="w-6 h-6 rounded" style={{ background: t.config?.colors?.primary || '#FF6B6B' }} title="Primary" />
+                        <div className="w-6 h-6 rounded" style={{ background: t.config?.colors?.secondary || '#4ECDC4' }} title="Secondary" />
+                        <div className="w-6 h-6 rounded" style={{ background: t.config?.colors?.background || '#FFFFFF' }} title="Background" />
+                        <div className="w-6 h-6 rounded" style={{ background: t.config?.colors?.text || '#2A2A2A' }} title="Text" />
+                      </div>
+                      <span className="text-xs text-gray-500 mt-1">Sin canvas</span>
                     </div>
-                    <span className="text-xs text-gray-500 mt-1">Sin canvas</span>
                   </div>
                 )}
-                {/* Badge formato */}
-                <div className="absolute top-1 left-1 px-1.5 py-0.5 text-xs font-medium rounded bg-white/90 backdrop-blur-sm text-gray-700">
-                  {t.page_format || 'A4'}
-                </div>
                 <div className="absolute top-1 right-1 flex gap-1">
                   <button onClick={() => navigate(`/admin/themes/${t.id}/edit`)} className="p-1 bg-white/90 rounded hover:bg-white" title="Editar en Canvas">
                     <svg className="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>

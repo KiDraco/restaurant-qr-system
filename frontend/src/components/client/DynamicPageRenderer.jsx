@@ -689,6 +689,8 @@ export function DynamicPageRenderer({
   onAction,
   globalConfig = {},
   pageConfig = {},
+  scale: scaleOverride,
+  embedded = false,
 }) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -704,9 +706,10 @@ export function DynamicPageRenderer({
   const format = config.page_format || 'mobile-portrait';
   const pageDims = PAGE_DIMENSIONS[format] || PAGE_DIMENSIONS['mobile-portrait'];
 
-  // Calculate scale to fit page in viewport
-  const [scale, setScale] = useState(1);
+  // Calculate scale to fit page in viewport (skipped when a scale override is provided)
+  const [windowScale, setScale] = useState(1);
   useEffect(() => {
+    if (typeof scaleOverride === 'number') return;
     const updateScale = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
@@ -719,7 +722,8 @@ export function DynamicPageRenderer({
     updateScale();
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
-  }, [pageDims.width, pageDims.height]);
+  }, [pageDims.width, pageDims.height, scaleOverride]);
+  const scale = typeof scaleOverride === 'number' ? scaleOverride : windowScale;
 
   // Background style object
   const backgroundStyleObj = useMemo(() => {
@@ -734,18 +738,21 @@ export function DynamicPageRenderer({
     }
   }, [background]);
 
-  // Global CSS variables
+  // Global CSS variables — set on the container when embedded so multiple
+  // previews on the same page don't bleed theme colors into each other.
+  const containerRef = useRef(null);
   useEffect(() => {
-    const root = document.documentElement;
+    const target = embedded ? containerRef.current : document.documentElement;
+    if (!target) return;
     if (globalConfig.colors) {
       Object.entries(globalConfig.colors).forEach(([key, value]) => {
-        root.style.setProperty(`--theme-${key}`, value);
+        target.style.setProperty(`--theme-${key}`, value);
       });
     }
     if (globalConfig.font_family && globalConfig.font_family !== 'system') {
-      root.style.setProperty('--theme-font', globalConfig.font_family);
+      target.style.setProperty('--theme-font', globalConfig.font_family);
     }
-  }, [globalConfig]);
+  }, [globalConfig, embedded]);
 
   // Container style — single style object, no duplicates
   const containerStyle = useMemo(() => ({
@@ -753,39 +760,45 @@ export function DynamicPageRenderer({
     height: pageDims.height,
     transform: `scale(${scale})`,
     transformOrigin: 'top left',
-    margin: '0 auto',
+    margin: embedded ? 0 : '0 auto',
     position: 'relative',
     background: backgroundStyleObj.background || backgroundStyleObj.backgroundColor || backgroundStyleObj.backgroundImage || '#FFFFFF',
     overflow: 'hidden',
-  }), [scale, pageDims, backgroundStyleObj]);
+  }), [scale, pageDims, backgroundStyleObj, embedded]);
 
   if (!page) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Página no encontrada</div>;
 
+  const content = (
+    <div ref={containerRef} className="relative" style={containerStyle}>
+      {elements.map((element, index) => (
+        <DynamicElement
+          key={`${element.id}-${index}`}
+          element={element}
+          pageType={page.type}
+          menuItems={menuItems}
+          categories={categories}
+          billData={billData}
+          tableNumber={tableNumber}
+          promotions={promotions}
+          cart={cart}
+          onAction={onAction}
+          cartOpen={cartOpen}
+          onToggleCart={handleToggleCart}
+          activeCategory={activeCategory}
+          searchQuery={searchQuery}
+          onCategoryChange={setActiveCategory}
+          onSearchChange={setSearchQuery}
+          globalConfig={globalConfig}
+/>
+      ))}
+    </div>
+  );
+
+  if (embedded) return <div>{content}</div>;
+
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#f3f4f6', padding: '10px' }}>
-      <div className="relative" style={containerStyle}>
-        {elements.map((element, index) => (
-          <DynamicElement
-            key={`${element.id}-${index}`}
-            element={element}
-            pageType={page.type}
-            menuItems={menuItems}
-            categories={categories}
-            billData={billData}
-            tableNumber={tableNumber}
-            promotions={promotions}
-            cart={cart}
-            onAction={onAction}
-            cartOpen={cartOpen}
-            onToggleCart={handleToggleCart}
-            activeCategory={activeCategory}
-            searchQuery={searchQuery}
-            onCategoryChange={setActiveCategory}
-            onSearchChange={setSearchQuery}
-            globalConfig={globalConfig}
-/>
-        ))}
-      </div>
+      {content}
     </div>
   );
 }
